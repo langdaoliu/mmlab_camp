@@ -1,0 +1,2328 @@
+2023/02/14 00:37:34 - mmengine - INFO - 
+------------------------------------------------------------
+System environment:
+    sys.platform: win32
+    Python: 3.8.16 (default, Jan 17 2023, 22:25:28) [MSC v.1916 64 bit (AMD64)]
+    CUDA available: True
+    numpy_random_seed: 0
+    GPU 0: NVIDIA GeForce RTX 3080 Ti
+    CUDA_HOME: C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.4
+    NVCC: Cuda compilation tools, release 11.4, V11.4.48
+    MSVC: 用于 x64 的 Microsoft (R) C/C++ 优化编译器 19.30.30705 版
+    GCC: n/a
+    PyTorch: 1.12.1+cu113
+    PyTorch compiling details: PyTorch built with:
+  - C++ Version: 199711
+  - MSVC 192829337
+  - Intel(R) Math Kernel Library Version 2020.0.2 Product Build 20200624 for Intel(R) 64 architecture applications
+  - Intel(R) MKL-DNN v2.6.0 (Git Hash 52b5f107dd9cf10910aaa19cb47f3abf9b349815)
+  - OpenMP 2019
+  - LAPACK is enabled (usually provided by MKL)
+  - CPU capability usage: AVX2
+  - CUDA Runtime 11.3
+  - NVCC architecture flags: -gencode;arch=compute_37,code=sm_37;-gencode;arch=compute_50,code=sm_50;-gencode;arch=compute_60,code=sm_60;-gencode;arch=compute_61,code=sm_61;-gencode;arch=compute_70,code=sm_70;-gencode;arch=compute_75,code=sm_75;-gencode;arch=compute_80,code=sm_80;-gencode;arch=compute_86,code=sm_86;-gencode;arch=compute_37,code=compute_37
+  - CuDNN 8.3.2  (built against CUDA 11.5)
+  - Magma 2.5.4
+  - Build settings: BLAS_INFO=mkl, BUILD_TYPE=Release, CUDA_VERSION=11.3, CUDNN_VERSION=8.3.2, CXX_COMPILER=C:/actions-runner/_work/pytorch/pytorch/builder/windows/tmp_bin/sccache-cl.exe, CXX_FLAGS=/DWIN32 /D_WINDOWS /GR /EHsc /w /bigobj -DUSE_PTHREADPOOL -openmp:experimental -IC:/actions-runner/_work/pytorch/pytorch/builder/windows/mkl/include -DNDEBUG -DUSE_KINETO -DLIBKINETO_NOCUPTI -DUSE_FBGEMM -DUSE_XNNPACK -DSYMBOLICATE_MOBILE_DEBUG_HANDLE -DEDGE_PROFILER_USE_KINETO, LAPACK_INFO=mkl, PERF_WITH_AVX=1, PERF_WITH_AVX2=1, PERF_WITH_AVX512=1, TORCH_VERSION=1.12.1, USE_CUDA=ON, USE_CUDNN=ON, USE_EXCEPTION_PTR=1, USE_GFLAGS=OFF, USE_GLOG=OFF, USE_MKL=ON, USE_MKLDNN=OFF, USE_MPI=OFF, USE_NCCL=OFF, USE_NNPACK=OFF, USE_OPENMP=ON, USE_ROCM=OFF, 
+
+    TorchVision: 0.13.1+cu113
+    OpenCV: 4.7.0
+    MMEngine: 0.5.0
+
+Runtime environment:
+    cudnn_benchmark: True
+    mp_cfg: {'mp_start_method': 'fork', 'opencv_num_threads': 0}
+    dist_cfg: {'backend': 'nccl'}
+    seed: 0
+    Distributed launcher: none
+    Distributed training: False
+    GPU number: 1
+------------------------------------------------------------
+
+2023/02/14 00:37:34 - mmengine - INFO - Config:
+norm_cfg = dict(type='BN', requires_grad=True)
+data_preprocessor = dict(
+    type='SegDataPreProcessor',
+    mean=[123.675, 116.28, 103.53],
+    std=[58.395, 57.12, 57.375],
+    bgr_to_rgb=True,
+    pad_val=0,
+    seg_pad_val=255,
+    size=(512, 1024))
+model = dict(
+    type='EncoderDecoder',
+    data_preprocessor=dict(
+        type='SegDataPreProcessor',
+        mean=[123.675, 116.28, 103.53],
+        std=[58.395, 57.12, 57.375],
+        bgr_to_rgb=True,
+        pad_val=0,
+        seg_pad_val=255,
+        size=(256, 256)),
+    pretrained='open-mmlab://resnet50_v1c',
+    backbone=dict(
+        type='ResNetV1c',
+        depth=50,
+        num_stages=4,
+        out_indices=(0, 1, 2, 3),
+        dilations=(1, 1, 2, 4),
+        strides=(1, 2, 1, 1),
+        norm_cfg=dict(type='BN', requires_grad=True),
+        norm_eval=False,
+        style='pytorch',
+        contract_dilation=True),
+    decode_head=dict(
+        type='PSPHead',
+        in_channels=2048,
+        in_index=3,
+        channels=512,
+        pool_scales=(1, 2, 3, 6),
+        dropout_ratio=0.1,
+        num_classes=2,
+        norm_cfg=dict(type='BN', requires_grad=True),
+        align_corners=False,
+        loss_decode=dict(
+            type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0)),
+    auxiliary_head=dict(
+        type='FCNHead',
+        in_channels=1024,
+        in_index=2,
+        channels=256,
+        num_convs=1,
+        concat_input=False,
+        dropout_ratio=0.1,
+        num_classes=2,
+        norm_cfg=dict(type='BN', requires_grad=True),
+        align_corners=False,
+        loss_decode=dict(
+            type='CrossEntropyLoss', use_sigmoid=False, loss_weight=0.4)),
+    train_cfg=dict(),
+    test_cfg=dict(mode='whole'))
+dataset_type = 'StanfordBackgroundDataset'
+data_root = 'F:\\data\\Glomeruli-dataset'
+crop_size = (256, 256)
+train_pipeline = [
+    dict(type='LoadImageFromFile'),
+    dict(type='LoadAnnotations'),
+    dict(
+        type='RandomResize',
+        scale=(320, 240),
+        ratio_range=(0.5, 2.0),
+        keep_ratio=True),
+    dict(type='RandomCrop', crop_size=(256, 256), cat_max_ratio=0.75),
+    dict(type='RandomFlip', prob=0.5),
+    dict(type='PackSegInputs')
+]
+test_pipeline = [
+    dict(type='LoadImageFromFile'),
+    dict(type='Resize', scale=(320, 240), keep_ratio=True),
+    dict(type='LoadAnnotations'),
+    dict(type='PackSegInputs')
+]
+img_ratios = [0.5, 0.75, 1.0, 1.25, 1.5, 1.75]
+tta_pipeline = [
+    dict(type='LoadImageFromFile', backend_args=dict(backend='local')),
+    dict(
+        type='TestTimeAug',
+        transforms=[[{
+            'type': 'Resize',
+            'scale_factor': 0.5,
+            'keep_ratio': True
+        }, {
+            'type': 'Resize',
+            'scale_factor': 0.75,
+            'keep_ratio': True
+        }, {
+            'type': 'Resize',
+            'scale_factor': 1.0,
+            'keep_ratio': True
+        }, {
+            'type': 'Resize',
+            'scale_factor': 1.25,
+            'keep_ratio': True
+        }, {
+            'type': 'Resize',
+            'scale_factor': 1.5,
+            'keep_ratio': True
+        }, {
+            'type': 'Resize',
+            'scale_factor': 1.75,
+            'keep_ratio': True
+        }],
+                    [{
+                        'type': 'RandomFlip',
+                        'prob': 0.0,
+                        'direction': 'horizontal'
+                    }, {
+                        'type': 'RandomFlip',
+                        'prob': 1.0,
+                        'direction': 'horizontal'
+                    }], [{
+                        'type': 'LoadAnnotations'
+                    }], [{
+                        'type': 'PackSegInputs'
+                    }]])
+]
+train_dataloader = dict(
+    batch_size=4,
+    num_workers=2,
+    persistent_workers=True,
+    sampler=dict(type='InfiniteSampler', shuffle=True),
+    dataset=dict(
+        type='StanfordBackgroundDataset',
+        data_root='F:\\data\\Glomeruli-dataset',
+        data_prefix=dict(img_path='images', seg_map_path='masks'),
+        pipeline=[
+            dict(type='LoadImageFromFile'),
+            dict(type='LoadAnnotations'),
+            dict(
+                type='RandomResize',
+                scale=(320, 240),
+                ratio_range=(0.5, 2.0),
+                keep_ratio=True),
+            dict(type='RandomCrop', crop_size=(256, 256), cat_max_ratio=0.75),
+            dict(type='RandomFlip', prob=0.5),
+            dict(type='PackSegInputs')
+        ],
+        ann_file='splits/train.txt'))
+val_dataloader = dict(
+    batch_size=1,
+    num_workers=4,
+    persistent_workers=True,
+    sampler=dict(type='DefaultSampler', shuffle=False),
+    dataset=dict(
+        type='StanfordBackgroundDataset',
+        data_root='F:\\data\\Glomeruli-dataset',
+        data_prefix=dict(img_path='images', seg_map_path='masks'),
+        pipeline=[
+            dict(type='LoadImageFromFile'),
+            dict(type='Resize', scale=(320, 240), keep_ratio=True),
+            dict(type='LoadAnnotations'),
+            dict(type='PackSegInputs')
+        ],
+        ann_file='splits/val.txt'))
+test_dataloader = dict(
+    batch_size=1,
+    num_workers=4,
+    persistent_workers=True,
+    sampler=dict(type='DefaultSampler', shuffle=False),
+    dataset=dict(
+        type='StanfordBackgroundDataset',
+        data_root='F:\\data\\Glomeruli-dataset',
+        data_prefix=dict(img_path='images', seg_map_path='masks'),
+        pipeline=[
+            dict(type='LoadImageFromFile'),
+            dict(type='Resize', scale=(320, 240), keep_ratio=True),
+            dict(type='LoadAnnotations'),
+            dict(type='PackSegInputs')
+        ],
+        ann_file='splits/val.txt'))
+val_evaluator = dict(type='IoUMetric', iou_metrics=['mIoU'])
+test_evaluator = dict(type='IoUMetric', iou_metrics=['mIoU'])
+default_scope = 'mmseg'
+env_cfg = dict(
+    cudnn_benchmark=True,
+    mp_cfg=dict(mp_start_method='fork', opencv_num_threads=0),
+    dist_cfg=dict(backend='nccl'))
+vis_backends = [dict(type='LocalVisBackend')]
+visualizer = dict(
+    type='SegLocalVisualizer',
+    vis_backends=[dict(type='LocalVisBackend')],
+    name='visualizer')
+log_processor = dict(by_epoch=False)
+log_level = 'INFO'
+load_from = 'F:/workspace/mmlab/mmsegmentation/checkpoint/pspnet_r50-d8_512x1024_40k_cityscapes_20200605_003338-2966598c.pth'
+resume = False
+tta_model = dict(type='SegTTAModel')
+optimizer = dict(type='SGD', lr=0.01, momentum=0.9, weight_decay=0.0005)
+optim_wrapper = dict(
+    type='OptimWrapper',
+    optimizer=dict(type='SGD', lr=0.01, momentum=0.9, weight_decay=0.0005),
+    clip_grad=None)
+param_scheduler = [
+    dict(
+        type='PolyLR',
+        eta_min=0.0001,
+        power=0.9,
+        begin=0,
+        end=40000,
+        by_epoch=False)
+]
+train_cfg = dict(type='IterBasedTrainLoop', max_iters=50000, val_interval=500)
+val_cfg = dict(type='ValLoop')
+test_cfg = dict(type='TestLoop')
+default_hooks = dict(
+    timer=dict(type='IterTimerHook'),
+    logger=dict(type='LoggerHook', interval=200, log_metric_by_epoch=False),
+    param_scheduler=dict(type='ParamSchedulerHook'),
+    checkpoint=dict(type='CheckpointHook', by_epoch=False, interval=5000),
+    sampler_seed=dict(type='DistSamplerSeedHook'),
+    visualization=dict(type='SegVisualizationHook'))
+work_dir = '../work_dirs/tutorial'
+randomness = dict(seed=0)
+
+2023/02/14 00:37:34 - mmengine - WARNING - The "visualizer" registry in mmseg did not set import location. Fallback to call `mmseg.utils.register_all_modules` instead.
+2023/02/14 00:37:34 - mmengine - WARNING - The "vis_backend" registry in mmseg did not set import location. Fallback to call `mmseg.utils.register_all_modules` instead.
+2023/02/14 00:37:35 - mmengine - WARNING - The "model" registry in mmseg did not set import location. Fallback to call `mmseg.utils.register_all_modules` instead.
+2023/02/14 00:37:35 - mmengine - INFO - Distributed training is not used, all SyncBatchNorm (SyncBN) layers in the model will be automatically reverted to BatchNormXd layers if they are used.
+2023/02/14 00:37:35 - mmengine - WARNING - The "hook" registry in mmseg did not set import location. Fallback to call `mmseg.utils.register_all_modules` instead.
+2023/02/14 00:37:35 - mmengine - INFO - Hooks will be executed in the following order:
+before_run:
+(VERY_HIGH   ) RuntimeInfoHook                    
+(BELOW_NORMAL) LoggerHook                         
+ -------------------- 
+before_train:
+(VERY_HIGH   ) RuntimeInfoHook                    
+(NORMAL      ) IterTimerHook                      
+(VERY_LOW    ) CheckpointHook                     
+ -------------------- 
+before_train_epoch:
+(VERY_HIGH   ) RuntimeInfoHook                    
+(NORMAL      ) IterTimerHook                      
+(NORMAL      ) DistSamplerSeedHook                
+ -------------------- 
+before_train_iter:
+(VERY_HIGH   ) RuntimeInfoHook                    
+(NORMAL      ) IterTimerHook                      
+ -------------------- 
+after_train_iter:
+(VERY_HIGH   ) RuntimeInfoHook                    
+(NORMAL      ) IterTimerHook                      
+(NORMAL      ) SegVisualizationHook               
+(BELOW_NORMAL) LoggerHook                         
+(LOW         ) ParamSchedulerHook                 
+(VERY_LOW    ) CheckpointHook                     
+ -------------------- 
+after_train_epoch:
+(NORMAL      ) IterTimerHook                      
+(LOW         ) ParamSchedulerHook                 
+(VERY_LOW    ) CheckpointHook                     
+ -------------------- 
+before_val_epoch:
+(NORMAL      ) IterTimerHook                      
+ -------------------- 
+before_val_iter:
+(NORMAL      ) IterTimerHook                      
+ -------------------- 
+after_val_iter:
+(NORMAL      ) IterTimerHook                      
+(NORMAL      ) SegVisualizationHook               
+(BELOW_NORMAL) LoggerHook                         
+ -------------------- 
+after_val_epoch:
+(VERY_HIGH   ) RuntimeInfoHook                    
+(NORMAL      ) IterTimerHook                      
+(BELOW_NORMAL) LoggerHook                         
+(LOW         ) ParamSchedulerHook                 
+(VERY_LOW    ) CheckpointHook                     
+ -------------------- 
+before_test_epoch:
+(NORMAL      ) IterTimerHook                      
+ -------------------- 
+before_test_iter:
+(NORMAL      ) IterTimerHook                      
+ -------------------- 
+after_test_iter:
+(NORMAL      ) IterTimerHook                      
+(NORMAL      ) SegVisualizationHook               
+(BELOW_NORMAL) LoggerHook                         
+ -------------------- 
+after_test_epoch:
+(VERY_HIGH   ) RuntimeInfoHook                    
+(NORMAL      ) IterTimerHook                      
+(BELOW_NORMAL) LoggerHook                         
+ -------------------- 
+after_run:
+(BELOW_NORMAL) LoggerHook                         
+ -------------------- 
+2023/02/14 00:37:36 - mmengine - WARNING - The "loop" registry in mmseg did not set import location. Fallback to call `mmseg.utils.register_all_modules` instead.
+2023/02/14 00:37:36 - mmengine - WARNING - The "dataset" registry in mmseg did not set import location. Fallback to call `mmseg.utils.register_all_modules` instead.
+2023/02/14 00:37:36 - mmengine - WARNING - The "transform" registry in mmseg did not set import location. Fallback to call `mmseg.utils.register_all_modules` instead.
+2023/02/14 00:37:36 - mmengine - WARNING - The "data sampler" registry in mmseg did not set import location. Fallback to call `mmseg.utils.register_all_modules` instead.
+2023/02/14 00:37:39 - mmengine - WARNING - The "optimizer wrapper constructor" registry in mmseg did not set import location. Fallback to call `mmseg.utils.register_all_modules` instead.
+2023/02/14 00:37:39 - mmengine - WARNING - The "optimizer" registry in mmseg did not set import location. Fallback to call `mmseg.utils.register_all_modules` instead.
+2023/02/14 00:37:39 - mmengine - WARNING - The "optim_wrapper" registry in mmseg did not set import location. Fallback to call `mmseg.utils.register_all_modules` instead.
+2023/02/14 00:37:39 - mmengine - WARNING - The "parameter scheduler" registry in mmseg did not set import location. Fallback to call `mmseg.utils.register_all_modules` instead.
+2023/02/14 00:37:39 - mmengine - WARNING - The "metric" registry in mmseg did not set import location. Fallback to call `mmseg.utils.register_all_modules` instead.
+2023/02/14 00:37:40 - mmengine - WARNING - The "weight initializer" registry in mmseg did not set import location. Fallback to call `mmseg.utils.register_all_modules` instead.
+2023/02/14 00:37:40 - mmengine - INFO - load model from: open-mmlab://resnet50_v1c
+2023/02/14 00:37:40 - mmengine - INFO - Loads checkpoint by openmmlab backend from path: open-mmlab://resnet50_v1c
+2023/02/14 00:37:40 - mmengine - WARNING - The model and loaded state dict do not match exactly
+
+unexpected key in source state_dict: fc.weight, fc.bias
+
+Name of parameter - Initialization information
+
+backbone.stem.0.weight - torch.Size([32, 3, 3, 3]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.stem.1.weight - torch.Size([32]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.stem.1.bias - torch.Size([32]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.stem.3.weight - torch.Size([32, 32, 3, 3]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.stem.4.weight - torch.Size([32]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.stem.4.bias - torch.Size([32]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.stem.6.weight - torch.Size([64, 32, 3, 3]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.stem.7.weight - torch.Size([64]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.stem.7.bias - torch.Size([64]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer1.0.conv1.weight - torch.Size([64, 64, 1, 1]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer1.0.bn1.weight - torch.Size([64]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer1.0.bn1.bias - torch.Size([64]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer1.0.conv2.weight - torch.Size([64, 64, 3, 3]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer1.0.bn2.weight - torch.Size([64]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer1.0.bn2.bias - torch.Size([64]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer1.0.conv3.weight - torch.Size([256, 64, 1, 1]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer1.0.bn3.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer1.0.bn3.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer1.0.downsample.0.weight - torch.Size([256, 64, 1, 1]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer1.0.downsample.1.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer1.0.downsample.1.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer1.1.conv1.weight - torch.Size([64, 256, 1, 1]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer1.1.bn1.weight - torch.Size([64]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer1.1.bn1.bias - torch.Size([64]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer1.1.conv2.weight - torch.Size([64, 64, 3, 3]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer1.1.bn2.weight - torch.Size([64]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer1.1.bn2.bias - torch.Size([64]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer1.1.conv3.weight - torch.Size([256, 64, 1, 1]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer1.1.bn3.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer1.1.bn3.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer1.2.conv1.weight - torch.Size([64, 256, 1, 1]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer1.2.bn1.weight - torch.Size([64]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer1.2.bn1.bias - torch.Size([64]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer1.2.conv2.weight - torch.Size([64, 64, 3, 3]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer1.2.bn2.weight - torch.Size([64]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer1.2.bn2.bias - torch.Size([64]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer1.2.conv3.weight - torch.Size([256, 64, 1, 1]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer1.2.bn3.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer1.2.bn3.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer2.0.conv1.weight - torch.Size([128, 256, 1, 1]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer2.0.bn1.weight - torch.Size([128]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer2.0.bn1.bias - torch.Size([128]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer2.0.conv2.weight - torch.Size([128, 128, 3, 3]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer2.0.bn2.weight - torch.Size([128]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer2.0.bn2.bias - torch.Size([128]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer2.0.conv3.weight - torch.Size([512, 128, 1, 1]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer2.0.bn3.weight - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer2.0.bn3.bias - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer2.0.downsample.0.weight - torch.Size([512, 256, 1, 1]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer2.0.downsample.1.weight - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer2.0.downsample.1.bias - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer2.1.conv1.weight - torch.Size([128, 512, 1, 1]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer2.1.bn1.weight - torch.Size([128]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer2.1.bn1.bias - torch.Size([128]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer2.1.conv2.weight - torch.Size([128, 128, 3, 3]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer2.1.bn2.weight - torch.Size([128]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer2.1.bn2.bias - torch.Size([128]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer2.1.conv3.weight - torch.Size([512, 128, 1, 1]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer2.1.bn3.weight - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer2.1.bn3.bias - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer2.2.conv1.weight - torch.Size([128, 512, 1, 1]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer2.2.bn1.weight - torch.Size([128]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer2.2.bn1.bias - torch.Size([128]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer2.2.conv2.weight - torch.Size([128, 128, 3, 3]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer2.2.bn2.weight - torch.Size([128]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer2.2.bn2.bias - torch.Size([128]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer2.2.conv3.weight - torch.Size([512, 128, 1, 1]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer2.2.bn3.weight - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer2.2.bn3.bias - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer2.3.conv1.weight - torch.Size([128, 512, 1, 1]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer2.3.bn1.weight - torch.Size([128]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer2.3.bn1.bias - torch.Size([128]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer2.3.conv2.weight - torch.Size([128, 128, 3, 3]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer2.3.bn2.weight - torch.Size([128]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer2.3.bn2.bias - torch.Size([128]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer2.3.conv3.weight - torch.Size([512, 128, 1, 1]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer2.3.bn3.weight - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer2.3.bn3.bias - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer3.0.conv1.weight - torch.Size([256, 512, 1, 1]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer3.0.bn1.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer3.0.bn1.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer3.0.conv2.weight - torch.Size([256, 256, 3, 3]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer3.0.bn2.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer3.0.bn2.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer3.0.conv3.weight - torch.Size([1024, 256, 1, 1]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer3.0.bn3.weight - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer3.0.bn3.bias - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer3.0.downsample.0.weight - torch.Size([1024, 512, 1, 1]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer3.0.downsample.1.weight - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer3.0.downsample.1.bias - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer3.1.conv1.weight - torch.Size([256, 1024, 1, 1]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer3.1.bn1.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer3.1.bn1.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer3.1.conv2.weight - torch.Size([256, 256, 3, 3]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer3.1.bn2.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer3.1.bn2.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer3.1.conv3.weight - torch.Size([1024, 256, 1, 1]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer3.1.bn3.weight - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer3.1.bn3.bias - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer3.2.conv1.weight - torch.Size([256, 1024, 1, 1]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer3.2.bn1.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer3.2.bn1.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer3.2.conv2.weight - torch.Size([256, 256, 3, 3]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer3.2.bn2.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer3.2.bn2.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer3.2.conv3.weight - torch.Size([1024, 256, 1, 1]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer3.2.bn3.weight - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer3.2.bn3.bias - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer3.3.conv1.weight - torch.Size([256, 1024, 1, 1]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer3.3.bn1.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer3.3.bn1.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer3.3.conv2.weight - torch.Size([256, 256, 3, 3]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer3.3.bn2.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer3.3.bn2.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer3.3.conv3.weight - torch.Size([1024, 256, 1, 1]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer3.3.bn3.weight - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer3.3.bn3.bias - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer3.4.conv1.weight - torch.Size([256, 1024, 1, 1]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer3.4.bn1.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer3.4.bn1.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer3.4.conv2.weight - torch.Size([256, 256, 3, 3]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer3.4.bn2.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer3.4.bn2.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer3.4.conv3.weight - torch.Size([1024, 256, 1, 1]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer3.4.bn3.weight - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer3.4.bn3.bias - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer3.5.conv1.weight - torch.Size([256, 1024, 1, 1]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer3.5.bn1.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer3.5.bn1.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer3.5.conv2.weight - torch.Size([256, 256, 3, 3]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer3.5.bn2.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer3.5.bn2.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer3.5.conv3.weight - torch.Size([1024, 256, 1, 1]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer3.5.bn3.weight - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer3.5.bn3.bias - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer4.0.conv1.weight - torch.Size([512, 1024, 1, 1]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer4.0.bn1.weight - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer4.0.bn1.bias - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer4.0.conv2.weight - torch.Size([512, 512, 3, 3]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer4.0.bn2.weight - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer4.0.bn2.bias - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer4.0.conv3.weight - torch.Size([2048, 512, 1, 1]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer4.0.bn3.weight - torch.Size([2048]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer4.0.bn3.bias - torch.Size([2048]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer4.0.downsample.0.weight - torch.Size([2048, 1024, 1, 1]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer4.0.downsample.1.weight - torch.Size([2048]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer4.0.downsample.1.bias - torch.Size([2048]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer4.1.conv1.weight - torch.Size([512, 2048, 1, 1]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer4.1.bn1.weight - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer4.1.bn1.bias - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer4.1.conv2.weight - torch.Size([512, 512, 3, 3]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer4.1.bn2.weight - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer4.1.bn2.bias - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer4.1.conv3.weight - torch.Size([2048, 512, 1, 1]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer4.1.bn3.weight - torch.Size([2048]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer4.1.bn3.bias - torch.Size([2048]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer4.2.conv1.weight - torch.Size([512, 2048, 1, 1]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer4.2.bn1.weight - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer4.2.bn1.bias - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer4.2.conv2.weight - torch.Size([512, 512, 3, 3]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer4.2.bn2.weight - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer4.2.bn2.bias - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer4.2.conv3.weight - torch.Size([2048, 512, 1, 1]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer4.2.bn3.weight - torch.Size([2048]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+backbone.layer4.2.bn3.bias - torch.Size([2048]): 
+PretrainedInit: load from open-mmlab://resnet50_v1c 
+
+decode_head.conv_seg.weight - torch.Size([2, 512, 1, 1]): 
+NormalInit: mean=0, std=0.01, bias=0 
+
+decode_head.conv_seg.bias - torch.Size([2]): 
+NormalInit: mean=0, std=0.01, bias=0 
+
+decode_head.psp_modules.0.1.conv.weight - torch.Size([512, 2048, 1, 1]): 
+The value is the same before and after calling `init_weights` of EncoderDecoder  
+
+decode_head.psp_modules.0.1.bn.weight - torch.Size([512]): 
+The value is the same before and after calling `init_weights` of EncoderDecoder  
+
+decode_head.psp_modules.0.1.bn.bias - torch.Size([512]): 
+The value is the same before and after calling `init_weights` of EncoderDecoder  
+
+decode_head.psp_modules.1.1.conv.weight - torch.Size([512, 2048, 1, 1]): 
+The value is the same before and after calling `init_weights` of EncoderDecoder  
+
+decode_head.psp_modules.1.1.bn.weight - torch.Size([512]): 
+The value is the same before and after calling `init_weights` of EncoderDecoder  
+
+decode_head.psp_modules.1.1.bn.bias - torch.Size([512]): 
+The value is the same before and after calling `init_weights` of EncoderDecoder  
+
+decode_head.psp_modules.2.1.conv.weight - torch.Size([512, 2048, 1, 1]): 
+The value is the same before and after calling `init_weights` of EncoderDecoder  
+
+decode_head.psp_modules.2.1.bn.weight - torch.Size([512]): 
+The value is the same before and after calling `init_weights` of EncoderDecoder  
+
+decode_head.psp_modules.2.1.bn.bias - torch.Size([512]): 
+The value is the same before and after calling `init_weights` of EncoderDecoder  
+
+decode_head.psp_modules.3.1.conv.weight - torch.Size([512, 2048, 1, 1]): 
+The value is the same before and after calling `init_weights` of EncoderDecoder  
+
+decode_head.psp_modules.3.1.bn.weight - torch.Size([512]): 
+The value is the same before and after calling `init_weights` of EncoderDecoder  
+
+decode_head.psp_modules.3.1.bn.bias - torch.Size([512]): 
+The value is the same before and after calling `init_weights` of EncoderDecoder  
+
+decode_head.bottleneck.conv.weight - torch.Size([512, 4096, 3, 3]): 
+Initialized by user-defined `init_weights` in ConvModule  
+
+decode_head.bottleneck.bn.weight - torch.Size([512]): 
+The value is the same before and after calling `init_weights` of EncoderDecoder  
+
+decode_head.bottleneck.bn.bias - torch.Size([512]): 
+The value is the same before and after calling `init_weights` of EncoderDecoder  
+
+auxiliary_head.conv_seg.weight - torch.Size([2, 256, 1, 1]): 
+NormalInit: mean=0, std=0.01, bias=0 
+
+auxiliary_head.conv_seg.bias - torch.Size([2]): 
+NormalInit: mean=0, std=0.01, bias=0 
+
+auxiliary_head.convs.0.conv.weight - torch.Size([256, 1024, 3, 3]): 
+The value is the same before and after calling `init_weights` of EncoderDecoder  
+
+auxiliary_head.convs.0.bn.weight - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of EncoderDecoder  
+
+auxiliary_head.convs.0.bn.bias - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of EncoderDecoder  
+2023/02/14 00:37:40 - mmengine - INFO - Load checkpoint from F:/workspace/mmlab/mmsegmentation/checkpoint/pspnet_r50-d8_512x1024_40k_cityscapes_20200605_003338-2966598c.pth
+2023/02/14 00:37:40 - mmengine - INFO - Checkpoints will be saved to F:\workspace\mmlab\mmsegmentation\work_dirs\tutorial.
+2023/02/14 00:38:00 - mmengine - INFO - Iter(train) [  200/50000]  lr: 9.9557e-03  eta: 1:20:18  time: 0.0802  data_time: 0.0015  memory: 5415  loss: 0.0836  decode.loss_ce: 0.0609  decode.acc_seg: 94.9924  aux.loss_ce: 0.0227  aux.acc_seg: 94.9924
+2023/02/14 00:38:16 - mmengine - INFO - Iter(train) [  400/50000]  lr: 9.9111e-03  eta: 1:13:22  time: 0.0820  data_time: 0.0017  memory: 2226  loss: 0.0385  decode.loss_ce: 0.0259  decode.acc_seg: 100.0000  aux.loss_ce: 0.0126  aux.acc_seg: 100.0000
+2023/02/14 00:38:33 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:15  time: 0.0173  data_time: 0.0012  memory: 4947  
+2023/02/14 00:38:37 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:03  time: 0.0168  data_time: 0.0013  memory: 695  
+2023/02/14 00:38:39 - mmengine - INFO - per class results:
+2023/02/14 00:38:39 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 98.76 | 99.84 |
+| glomeruili |  40.2 | 43.51 |
++------------+-------+-------+
+2023/02/14 00:38:39 - mmengine - INFO - Iter(val) [515/515]  aAcc: 98.7700  mIoU: 69.4800  mAcc: 71.6800
+2023/02/14 00:38:40 - mmengine - INFO - Exp name: pspnet_r50-d8_4xb2-40k_cityscapes-512x1024_20230214_003728
+2023/02/14 00:38:47 - mmengine - INFO - Iter(train) [  600/50000]  lr: 9.8665e-03  eta: 1:10:51  time: 0.0809  data_time: 0.0015  memory: 2226  loss: 0.0771  decode.loss_ce: 0.0544  decode.acc_seg: 98.5303  aux.loss_ce: 0.0226  aux.acc_seg: 98.5303
+2023/02/14 00:39:03 - mmengine - INFO - Iter(train) [  800/50000]  lr: 9.8218e-03  eta: 1:09:32  time: 0.0805  data_time: 0.0016  memory: 2226  loss: 0.0834  decode.loss_ce: 0.0593  decode.acc_seg: 85.3821  aux.loss_ce: 0.0241  aux.acc_seg: 82.3269
+2023/02/14 00:39:19 - mmengine - INFO - Exp name: pspnet_r50-d8_4xb2-40k_cityscapes-512x1024_20230214_003728
+2023/02/14 00:39:19 - mmengine - INFO - Iter(train) [ 1000/50000]  lr: 9.7772e-03  eta: 1:08:35  time: 0.0807  data_time: 0.0018  memory: 2226  loss: 0.0397  decode.loss_ce: 0.0246  decode.acc_seg: 99.8435  aux.loss_ce: 0.0151  aux.acc_seg: 100.0000
+2023/02/14 00:39:23 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0172  data_time: 0.0012  memory: 695  
+2023/02/14 00:39:26 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0172  data_time: 0.0011  memory: 695  
+2023/02/14 00:39:28 - mmengine - INFO - per class results:
+2023/02/14 00:39:28 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 98.31 | 98.96 |
+| glomeruili | 42.96 | 65.99 |
++------------+-------+-------+
+2023/02/14 00:39:28 - mmengine - INFO - Iter(val) [515/515]  aAcc: 98.3400  mIoU: 70.6400  mAcc: 82.4800
+2023/02/14 00:39:44 - mmengine - INFO - Iter(train) [ 1200/50000]  lr: 9.7325e-03  eta: 1:07:54  time: 0.0812  data_time: 0.0018  memory: 2226  loss: 0.0327  decode.loss_ce: 0.0216  decode.acc_seg: 100.0000  aux.loss_ce: 0.0111  aux.acc_seg: 100.0000
+2023/02/14 00:40:00 - mmengine - INFO - Iter(train) [ 1400/50000]  lr: 9.6878e-03  eta: 1:07:22  time: 0.0800  data_time: 0.0019  memory: 2226  loss: 0.0648  decode.loss_ce: 0.0464  decode.acc_seg: 99.8042  aux.loss_ce: 0.0184  aux.acc_seg: 99.3298
+2023/02/14 00:40:12 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0177  data_time: 0.0011  memory: 2226  
+2023/02/14 00:40:15 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0164  data_time: 0.0010  memory: 695  
+2023/02/14 00:40:17 - mmengine - INFO - per class results:
+2023/02/14 00:40:17 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background |  99.1 | 99.76 |
+| glomeruili | 58.55 | 65.74 |
++------------+-------+-------+
+2023/02/14 00:40:17 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.1200  mIoU: 78.8300  mAcc: 82.7500
+2023/02/14 00:40:25 - mmengine - INFO - Iter(train) [ 1600/50000]  lr: 9.6431e-03  eta: 1:06:49  time: 0.0804  data_time: 0.0017  memory: 2226  loss: 0.0345  decode.loss_ce: 0.0234  decode.acc_seg: 100.0000  aux.loss_ce: 0.0111  aux.acc_seg: 99.6944
+2023/02/14 00:40:41 - mmengine - INFO - Iter(train) [ 1800/50000]  lr: 9.5983e-03  eta: 1:06:19  time: 0.0803  data_time: 0.0018  memory: 2226  loss: 0.0305  decode.loss_ce: 0.0214  decode.acc_seg: 100.0000  aux.loss_ce: 0.0091  aux.acc_seg: 99.9565
+2023/02/14 00:40:57 - mmengine - INFO - Exp name: pspnet_r50-d8_4xb2-40k_cityscapes-512x1024_20230214_003728
+2023/02/14 00:40:57 - mmengine - INFO - Iter(train) [ 2000/50000]  lr: 9.5536e-03  eta: 1:05:52  time: 0.0807  data_time: 0.0016  memory: 2226  loss: 0.0800  decode.loss_ce: 0.0613  decode.acc_seg: 100.0000  aux.loss_ce: 0.0187  aux.acc_seg: 100.0000
+2023/02/14 00:41:01 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0170  data_time: 0.0011  memory: 695  
+2023/02/14 00:41:04 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0170  data_time: 0.0011  memory: 695  
+2023/02/14 00:41:06 - mmengine - INFO - per class results:
+2023/02/14 00:41:06 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 98.11 | 99.69 |
+| glomeruili |  14.9 | 17.31 |
++------------+-------+-------+
+2023/02/14 00:41:06 - mmengine - INFO - Iter(val) [515/515]  aAcc: 98.1200  mIoU: 56.5100  mAcc: 58.5000
+2023/02/14 00:41:22 - mmengine - INFO - Iter(train) [ 2200/50000]  lr: 9.5088e-03  eta: 1:05:27  time: 0.0805  data_time: 0.0016  memory: 2226  loss: 0.0745  decode.loss_ce: 0.0536  decode.acc_seg: 90.8637  aux.loss_ce: 0.0209  aux.acc_seg: 94.8298
+2023/02/14 00:41:38 - mmengine - INFO - Iter(train) [ 2400/50000]  lr: 9.4640e-03  eta: 1:05:04  time: 0.0803  data_time: 0.0015  memory: 2226  loss: 0.0490  decode.loss_ce: 0.0338  decode.acc_seg: 98.8257  aux.loss_ce: 0.0152  aux.acc_seg: 98.7870
+2023/02/14 00:41:50 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0169  data_time: 0.0012  memory: 2226  
+2023/02/14 00:41:53 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0164  data_time: 0.0010  memory: 695  
+2023/02/14 00:41:55 - mmengine - INFO - per class results:
+2023/02/14 00:41:55 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 99.19 | 99.85 |
+| glomeruili | 61.13 | 65.88 |
++------------+-------+-------+
+2023/02/14 00:41:55 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.2000  mIoU: 80.1600  mAcc: 82.8600
+2023/02/14 00:42:03 - mmengine - INFO - Iter(train) [ 2600/50000]  lr: 9.4191e-03  eta: 1:04:42  time: 0.0804  data_time: 0.0015  memory: 2226  loss: 0.0173  decode.loss_ce: 0.0129  decode.acc_seg: 99.5153  aux.loss_ce: 0.0044  aux.acc_seg: 98.1598
+2023/02/14 00:42:19 - mmengine - INFO - Iter(train) [ 2800/50000]  lr: 9.3743e-03  eta: 1:04:20  time: 0.0804  data_time: 0.0017  memory: 2226  loss: 0.0311  decode.loss_ce: 0.0222  decode.acc_seg: 100.0000  aux.loss_ce: 0.0089  aux.acc_seg: 100.0000
+2023/02/14 00:42:35 - mmengine - INFO - Exp name: pspnet_r50-d8_4xb2-40k_cityscapes-512x1024_20230214_003728
+2023/02/14 00:42:35 - mmengine - INFO - Iter(train) [ 3000/50000]  lr: 9.3294e-03  eta: 1:04:00  time: 0.0802  data_time: 0.0017  memory: 2226  loss: 0.0324  decode.loss_ce: 0.0226  decode.acc_seg: 97.2673  aux.loss_ce: 0.0098  aux.acc_seg: 97.0077
+2023/02/14 00:42:39 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0172  data_time: 0.0012  memory: 695  
+2023/02/14 00:42:42 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0165  data_time: 0.0010  memory: 695  
+2023/02/14 00:42:44 - mmengine - INFO - per class results:
+2023/02/14 00:42:44 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background |  99.3 | 99.72 |
+| glomeruili | 68.42 | 78.31 |
++------------+-------+-------+
+2023/02/14 00:42:44 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.3100  mIoU: 83.8600  mAcc: 89.0100
+2023/02/14 00:43:00 - mmengine - INFO - Iter(train) [ 3200/50000]  lr: 9.2845e-03  eta: 1:03:40  time: 0.0804  data_time: 0.0020  memory: 2226  loss: 0.0195  decode.loss_ce: 0.0142  decode.acc_seg: 99.9962  aux.loss_ce: 0.0053  aux.acc_seg: 99.8883
+2023/02/14 00:43:16 - mmengine - INFO - Iter(train) [ 3400/50000]  lr: 9.2395e-03  eta: 1:03:20  time: 0.0806  data_time: 0.0015  memory: 2226  loss: 0.0198  decode.loss_ce: 0.0126  decode.acc_seg: 99.1984  aux.loss_ce: 0.0072  aux.acc_seg: 96.3255
+2023/02/14 00:43:28 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0171  data_time: 0.0011  memory: 2226  
+2023/02/14 00:43:31 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0167  data_time: 0.0012  memory: 695  
+2023/02/14 00:43:33 - mmengine - INFO - per class results:
+2023/02/14 00:43:33 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background |  99.0 | 99.31 |
+| glomeruili | 61.62 | 83.46 |
++------------+-------+-------+
+2023/02/14 00:43:33 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.0100  mIoU: 80.3100  mAcc: 91.3900
+2023/02/14 00:43:41 - mmengine - INFO - Iter(train) [ 3600/50000]  lr: 9.1946e-03  eta: 1:03:01  time: 0.0802  data_time: 0.0018  memory: 2226  loss: 0.0181  decode.loss_ce: 0.0123  decode.acc_seg: 99.1111  aux.loss_ce: 0.0057  aux.acc_seg: 98.9027
+2023/02/14 00:43:57 - mmengine - INFO - Iter(train) [ 3800/50000]  lr: 9.1496e-03  eta: 1:02:43  time: 0.0807  data_time: 0.0018  memory: 2226  loss: 0.0461  decode.loss_ce: 0.0302  decode.acc_seg: 99.4040  aux.loss_ce: 0.0159  aux.acc_seg: 99.6450
+2023/02/14 00:44:13 - mmengine - INFO - Exp name: pspnet_r50-d8_4xb2-40k_cityscapes-512x1024_20230214_003728
+2023/02/14 00:44:13 - mmengine - INFO - Iter(train) [ 4000/50000]  lr: 9.1046e-03  eta: 1:02:24  time: 0.0807  data_time: 0.0018  memory: 2226  loss: 0.0156  decode.loss_ce: 0.0109  decode.acc_seg: 99.4759  aux.loss_ce: 0.0047  aux.acc_seg: 99.4759
+2023/02/14 00:44:17 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0172  data_time: 0.0013  memory: 695  
+2023/02/14 00:44:20 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0174  data_time: 0.0012  memory: 695  
+2023/02/14 00:44:22 - mmengine - INFO - per class results:
+2023/02/14 00:44:22 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 99.34 | 99.62 |
+| glomeruili | 71.32 | 85.41 |
++------------+-------+-------+
+2023/02/14 00:44:22 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.3500  mIoU: 85.3300  mAcc: 92.5100
+2023/02/14 00:44:38 - mmengine - INFO - Iter(train) [ 4200/50000]  lr: 9.0595e-03  eta: 1:02:06  time: 0.0804  data_time: 0.0017  memory: 2226  loss: 0.0101  decode.loss_ce: 0.0069  decode.acc_seg: 100.0000  aux.loss_ce: 0.0032  aux.acc_seg: 100.0000
+2023/02/14 00:44:54 - mmengine - INFO - Iter(train) [ 4400/50000]  lr: 9.0145e-03  eta: 1:01:48  time: 0.0805  data_time: 0.0016  memory: 2226  loss: 0.0446  decode.loss_ce: 0.0312  decode.acc_seg: 97.0928  aux.loss_ce: 0.0134  aux.acc_seg: 94.7708
+2023/02/14 00:45:06 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0169  data_time: 0.0011  memory: 2226  
+2023/02/14 00:45:09 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0169  data_time: 0.0012  memory: 695  
+2023/02/14 00:45:11 - mmengine - INFO - per class results:
+2023/02/14 00:45:11 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 99.17 | 99.75 |
+| glomeruili | 61.95 | 69.99 |
++------------+-------+-------+
+2023/02/14 00:45:11 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.1800  mIoU: 80.5600  mAcc: 84.8700
+2023/02/14 00:45:19 - mmengine - INFO - Iter(train) [ 4600/50000]  lr: 8.9694e-03  eta: 1:01:30  time: 0.0804  data_time: 0.0018  memory: 2226  loss: 0.0257  decode.loss_ce: 0.0167  decode.acc_seg: 100.0000  aux.loss_ce: 0.0090  aux.acc_seg: 100.0000
+2023/02/14 00:45:35 - mmengine - INFO - Iter(train) [ 4800/50000]  lr: 8.9243e-03  eta: 1:01:12  time: 0.0808  data_time: 0.0017  memory: 2226  loss: 0.0663  decode.loss_ce: 0.0451  decode.acc_seg: 97.1720  aux.loss_ce: 0.0211  aux.acc_seg: 97.6180
+2023/02/14 00:45:51 - mmengine - INFO - Exp name: pspnet_r50-d8_4xb2-40k_cityscapes-512x1024_20230214_003728
+2023/02/14 00:45:51 - mmengine - INFO - Iter(train) [ 5000/50000]  lr: 8.8791e-03  eta: 1:00:55  time: 0.0810  data_time: 0.0018  memory: 2226  loss: 0.0102  decode.loss_ce: 0.0070  decode.acc_seg: 100.0000  aux.loss_ce: 0.0032  aux.acc_seg: 100.0000
+2023/02/14 00:45:51 - mmengine - INFO - Saving checkpoint at 5000 iterations
+2023/02/14 00:45:57 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0162  data_time: 0.0011  memory: 695  
+2023/02/14 00:46:01 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0171  data_time: 0.0012  memory: 695  
+2023/02/14 00:46:03 - mmengine - INFO - per class results:
+2023/02/14 00:46:03 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 99.08 | 99.92 |
+| glomeruili | 53.92 | 56.21 |
++------------+-------+-------+
+2023/02/14 00:46:03 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.0900  mIoU: 76.5000  mAcc: 78.0600
+2023/02/14 00:46:19 - mmengine - INFO - Iter(train) [ 5200/50000]  lr: 8.8340e-03  eta: 1:00:37  time: 0.0805  data_time: 0.0019  memory: 2226  loss: 0.0060  decode.loss_ce: 0.0041  decode.acc_seg: 100.0000  aux.loss_ce: 0.0019  aux.acc_seg: 100.0000
+2023/02/14 00:46:35 - mmengine - INFO - Iter(train) [ 5400/50000]  lr: 8.7888e-03  eta: 1:00:20  time: 0.0804  data_time: 0.0016  memory: 2226  loss: 0.0259  decode.loss_ce: 0.0183  decode.acc_seg: 100.0000  aux.loss_ce: 0.0076  aux.acc_seg: 100.0000
+2023/02/14 00:46:46 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0178  data_time: 0.0013  memory: 2226  
+2023/02/14 00:46:50 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0165  data_time: 0.0010  memory: 695  
+2023/02/14 00:46:52 - mmengine - INFO - per class results:
+2023/02/14 00:46:52 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 99.22 | 99.92 |
+| glomeruili | 60.98 |  63.6 |
++------------+-------+-------+
+2023/02/14 00:46:52 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.2300  mIoU: 80.1000  mAcc: 81.7600
+2023/02/14 00:47:00 - mmengine - INFO - Iter(train) [ 5600/50000]  lr: 8.7436e-03  eta: 1:00:02  time: 0.0803  data_time: 0.0017  memory: 2226  loss: 0.0282  decode.loss_ce: 0.0197  decode.acc_seg: 100.0000  aux.loss_ce: 0.0085  aux.acc_seg: 100.0000
+2023/02/14 00:47:16 - mmengine - INFO - Iter(train) [ 5800/50000]  lr: 8.6983e-03  eta: 0:59:45  time: 0.0808  data_time: 0.0019  memory: 2226  loss: 0.0224  decode.loss_ce: 0.0154  decode.acc_seg: 100.0000  aux.loss_ce: 0.0070  aux.acc_seg: 100.0000
+2023/02/14 00:47:32 - mmengine - INFO - Exp name: pspnet_r50-d8_4xb2-40k_cityscapes-512x1024_20230214_003728
+2023/02/14 00:47:32 - mmengine - INFO - Iter(train) [ 6000/50000]  lr: 8.6531e-03  eta: 0:59:28  time: 0.0811  data_time: 0.0017  memory: 2226  loss: 0.0501  decode.loss_ce: 0.0337  decode.acc_seg: 97.7831  aux.loss_ce: 0.0164  aux.acc_seg: 97.7462
+2023/02/14 00:47:35 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0176  data_time: 0.0013  memory: 695  
+2023/02/14 00:47:39 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0170  data_time: 0.0011  memory: 695  
+2023/02/14 00:47:41 - mmengine - INFO - per class results:
+2023/02/14 00:47:41 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 99.28 | 99.53 |
+| glomeruili | 70.06 | 87.15 |
++------------+-------+-------+
+2023/02/14 00:47:41 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.2900  mIoU: 84.6700  mAcc: 93.3400
+2023/02/14 00:47:57 - mmengine - INFO - Iter(train) [ 6200/50000]  lr: 8.6078e-03  eta: 0:59:11  time: 0.0802  data_time: 0.0017  memory: 2226  loss: 0.0181  decode.loss_ce: 0.0127  decode.acc_seg: 99.9207  aux.loss_ce: 0.0054  aux.acc_seg: 99.9207
+2023/02/14 00:48:13 - mmengine - INFO - Iter(train) [ 6400/50000]  lr: 8.5625e-03  eta: 0:58:54  time: 0.0809  data_time: 0.0018  memory: 2226  loss: 0.0324  decode.loss_ce: 0.0176  decode.acc_seg: 100.0000  aux.loss_ce: 0.0147  aux.acc_seg: 100.0000
+2023/02/14 00:48:24 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0175  data_time: 0.0012  memory: 2226  
+2023/02/14 00:48:28 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0164  data_time: 0.0011  memory: 695  
+2023/02/14 00:48:30 - mmengine - INFO - per class results:
+2023/02/14 00:48:30 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 99.25 |  99.5 |
+| glomeruili | 69.25 | 87.29 |
++------------+-------+-------+
+2023/02/14 00:48:30 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.2600  mIoU: 84.2500  mAcc: 93.3900
+2023/02/14 00:48:38 - mmengine - INFO - Iter(train) [ 6600/50000]  lr: 8.5171e-03  eta: 0:58:37  time: 0.0805  data_time: 0.0019  memory: 2226  loss: 0.0097  decode.loss_ce: 0.0067  decode.acc_seg: 100.0000  aux.loss_ce: 0.0030  aux.acc_seg: 100.0000
+2023/02/14 00:48:54 - mmengine - INFO - Iter(train) [ 6800/50000]  lr: 8.4717e-03  eta: 0:58:20  time: 0.0800  data_time: 0.0015  memory: 2226  loss: 0.0103  decode.loss_ce: 0.0064  decode.acc_seg: 100.0000  aux.loss_ce: 0.0038  aux.acc_seg: 100.0000
+2023/02/14 00:49:10 - mmengine - INFO - Exp name: pspnet_r50-d8_4xb2-40k_cityscapes-512x1024_20230214_003728
+2023/02/14 00:49:10 - mmengine - INFO - Iter(train) [ 7000/50000]  lr: 8.4263e-03  eta: 0:58:04  time: 0.0804  data_time: 0.0019  memory: 2226  loss: 0.0126  decode.loss_ce: 0.0085  decode.acc_seg: 100.0000  aux.loss_ce: 0.0041  aux.acc_seg: 99.9473
+2023/02/14 00:49:13 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0165  data_time: 0.0010  memory: 695  
+2023/02/14 00:49:17 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0169  data_time: 0.0010  memory: 695  
+2023/02/14 00:49:19 - mmengine - INFO - per class results:
+2023/02/14 00:49:19 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 99.43 | 99.84 |
+| glomeruili |  72.8 | 78.87 |
++------------+-------+-------+
+2023/02/14 00:49:19 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.4400  mIoU: 86.1200  mAcc: 89.3500
+2023/02/14 00:49:35 - mmengine - INFO - Iter(train) [ 7200/50000]  lr: 8.3809e-03  eta: 0:57:47  time: 0.0803  data_time: 0.0017  memory: 2226  loss: 0.0097  decode.loss_ce: 0.0061  decode.acc_seg: 100.0000  aux.loss_ce: 0.0036  aux.acc_seg: 99.6973
+2023/02/14 00:49:51 - mmengine - INFO - Iter(train) [ 7400/50000]  lr: 8.3354e-03  eta: 0:57:30  time: 0.0805  data_time: 0.0020  memory: 2226  loss: 0.0124  decode.loss_ce: 0.0075  decode.acc_seg: 99.6831  aux.loss_ce: 0.0048  aux.acc_seg: 97.0515
+2023/02/14 00:50:02 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0167  data_time: 0.0010  memory: 2226  
+2023/02/14 00:50:06 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0166  data_time: 0.0011  memory: 695  
+2023/02/14 00:50:08 - mmengine - INFO - per class results:
+2023/02/14 00:50:08 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 99.42 | 99.84 |
+| glomeruili | 72.25 | 78.06 |
++------------+-------+-------+
+2023/02/14 00:50:08 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.4300  mIoU: 85.8400  mAcc: 88.9500
+2023/02/14 00:50:16 - mmengine - INFO - Iter(train) [ 7600/50000]  lr: 8.2900e-03  eta: 0:57:13  time: 0.0802  data_time: 0.0018  memory: 2226  loss: 0.0039  decode.loss_ce: 0.0026  decode.acc_seg: 99.8787  aux.loss_ce: 0.0014  aux.acc_seg: 99.5708
+2023/02/14 00:50:32 - mmengine - INFO - Iter(train) [ 7800/50000]  lr: 8.2444e-03  eta: 0:56:57  time: 0.0805  data_time: 0.0019  memory: 2226  loss: 0.0103  decode.loss_ce: 0.0070  decode.acc_seg: 100.0000  aux.loss_ce: 0.0033  aux.acc_seg: 100.0000
+2023/02/14 00:50:48 - mmengine - INFO - Exp name: pspnet_r50-d8_4xb2-40k_cityscapes-512x1024_20230214_003728
+2023/02/14 00:50:48 - mmengine - INFO - Iter(train) [ 8000/50000]  lr: 8.1989e-03  eta: 0:56:40  time: 0.0803  data_time: 0.0017  memory: 2226  loss: 0.0081  decode.loss_ce: 0.0053  decode.acc_seg: 99.8059  aux.loss_ce: 0.0028  aux.acc_seg: 99.8256
+2023/02/14 00:50:52 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0174  data_time: 0.0010  memory: 695  
+2023/02/14 00:50:55 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0168  data_time: 0.0013  memory: 695  
+2023/02/14 00:50:57 - mmengine - INFO - per class results:
+2023/02/14 00:50:57 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 99.49 |  99.8 |
+| glomeruili | 75.85 | 83.68 |
++------------+-------+-------+
+2023/02/14 00:50:57 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.4900  mIoU: 87.6700  mAcc: 91.7400
+2023/02/14 00:51:13 - mmengine - INFO - Iter(train) [ 8200/50000]  lr: 8.1533e-03  eta: 0:56:23  time: 0.0805  data_time: 0.0019  memory: 2226  loss: 0.0164  decode.loss_ce: 0.0109  decode.acc_seg: 96.9123  aux.loss_ce: 0.0054  aux.acc_seg: 95.4382
+2023/02/14 00:51:29 - mmengine - INFO - Iter(train) [ 8400/50000]  lr: 8.1077e-03  eta: 0:56:07  time: 0.0798  data_time: 0.0017  memory: 2226  loss: 0.0109  decode.loss_ce: 0.0069  decode.acc_seg: 99.1990  aux.loss_ce: 0.0040  aux.acc_seg: 99.0981
+2023/02/14 00:51:41 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0169  data_time: 0.0010  memory: 2226  
+2023/02/14 00:51:44 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0172  data_time: 0.0013  memory: 695  
+2023/02/14 00:51:46 - mmengine - INFO - per class results:
+2023/02/14 00:51:46 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 99.52 | 99.81 |
+| glomeruili | 77.21 | 84.79 |
++------------+-------+-------+
+2023/02/14 00:51:46 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.5200  mIoU: 88.3600  mAcc: 92.3000
+2023/02/14 00:51:54 - mmengine - INFO - Iter(train) [ 8600/50000]  lr: 8.0621e-03  eta: 0:55:50  time: 0.0809  data_time: 0.0016  memory: 2226  loss: 0.0154  decode.loss_ce: 0.0101  decode.acc_seg: 100.0000  aux.loss_ce: 0.0054  aux.acc_seg: 100.0000
+2023/02/14 00:52:10 - mmengine - INFO - Iter(train) [ 8800/50000]  lr: 8.0164e-03  eta: 0:55:34  time: 0.0803  data_time: 0.0018  memory: 2226  loss: 0.0210  decode.loss_ce: 0.0151  decode.acc_seg: 99.8436  aux.loss_ce: 0.0059  aux.acc_seg: 99.6700
+2023/02/14 00:52:26 - mmengine - INFO - Exp name: pspnet_r50-d8_4xb2-40k_cityscapes-512x1024_20230214_003728
+2023/02/14 00:52:26 - mmengine - INFO - Iter(train) [ 9000/50000]  lr: 7.9708e-03  eta: 0:55:17  time: 0.0808  data_time: 0.0018  memory: 2226  loss: 0.0112  decode.loss_ce: 0.0076  decode.acc_seg: 99.9209  aux.loss_ce: 0.0036  aux.acc_seg: 99.9209
+2023/02/14 00:52:30 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0170  data_time: 0.0012  memory: 695  
+2023/02/14 00:52:33 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0166  data_time: 0.0011  memory: 695  
+2023/02/14 00:52:35 - mmengine - INFO - per class results:
+2023/02/14 00:52:35 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 99.45 | 99.74 |
+| glomeruili | 74.65 | 84.54 |
++------------+-------+-------+
+2023/02/14 00:52:35 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.4500  mIoU: 87.0500  mAcc: 92.1400
+2023/02/14 00:52:51 - mmengine - INFO - Iter(train) [ 9200/50000]  lr: 7.9250e-03  eta: 0:55:01  time: 0.0805  data_time: 0.0018  memory: 2226  loss: 0.0050  decode.loss_ce: 0.0033  decode.acc_seg: 99.5705  aux.loss_ce: 0.0017  aux.acc_seg: 99.5440
+2023/02/14 00:53:07 - mmengine - INFO - Iter(train) [ 9400/50000]  lr: 7.8793e-03  eta: 0:54:44  time: 0.0804  data_time: 0.0017  memory: 2226  loss: 0.0256  decode.loss_ce: 0.0165  decode.acc_seg: 99.3486  aux.loss_ce: 0.0091  aux.acc_seg: 99.3486
+2023/02/14 00:53:19 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0168  data_time: 0.0011  memory: 2226  
+2023/02/14 00:53:22 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0169  data_time: 0.0010  memory: 695  
+2023/02/14 00:53:24 - mmengine - INFO - per class results:
+2023/02/14 00:53:24 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 99.34 | 99.92 |
+| glomeruili | 66.94 | 69.77 |
++------------+-------+-------+
+2023/02/14 00:53:24 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.3500  mIoU: 83.1400  mAcc: 84.8400
+2023/02/14 00:53:32 - mmengine - INFO - Iter(train) [ 9600/50000]  lr: 7.8335e-03  eta: 0:54:28  time: 0.0802  data_time: 0.0019  memory: 2226  loss: 0.0165  decode.loss_ce: 0.0117  decode.acc_seg: 100.0000  aux.loss_ce: 0.0048  aux.acc_seg: 100.0000
+2023/02/14 00:53:48 - mmengine - INFO - Iter(train) [ 9800/50000]  lr: 7.7877e-03  eta: 0:54:11  time: 0.0807  data_time: 0.0017  memory: 2226  loss: 0.0186  decode.loss_ce: 0.0123  decode.acc_seg: 98.5861  aux.loss_ce: 0.0063  aux.acc_seg: 96.2576
+2023/02/14 00:54:04 - mmengine - INFO - Exp name: pspnet_r50-d8_4xb2-40k_cityscapes-512x1024_20230214_003728
+2023/02/14 00:54:04 - mmengine - INFO - Iter(train) [10000/50000]  lr: 7.7419e-03  eta: 0:53:55  time: 0.0809  data_time: 0.0019  memory: 2226  loss: 0.0147  decode.loss_ce: 0.0105  decode.acc_seg: 100.0000  aux.loss_ce: 0.0042  aux.acc_seg: 100.0000
+2023/02/14 00:54:04 - mmengine - INFO - Saving checkpoint at 10000 iterations
+2023/02/14 00:54:10 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0177  data_time: 0.0014  memory: 695  
+2023/02/14 00:54:14 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0170  data_time: 0.0011  memory: 695  
+2023/02/14 00:54:16 - mmengine - INFO - per class results:
+2023/02/14 00:54:16 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 99.32 | 99.87 |
+| glomeruili | 66.75 | 71.34 |
++------------+-------+-------+
+2023/02/14 00:54:16 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.3200  mIoU: 83.0300  mAcc: 85.6000
+2023/02/14 00:54:32 - mmengine - INFO - Iter(train) [10200/50000]  lr: 7.6960e-03  eta: 0:53:38  time: 0.0805  data_time: 0.0014  memory: 2226  loss: 0.0112  decode.loss_ce: 0.0080  decode.acc_seg: 100.0000  aux.loss_ce: 0.0033  aux.acc_seg: 100.0000
+2023/02/14 00:54:48 - mmengine - INFO - Iter(train) [10400/50000]  lr: 7.6501e-03  eta: 0:53:22  time: 0.0800  data_time: 0.0017  memory: 2226  loss: 0.0188  decode.loss_ce: 0.0127  decode.acc_seg: 99.6017  aux.loss_ce: 0.0061  aux.acc_seg: 99.6125
+2023/02/14 00:54:59 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0173  data_time: 0.0011  memory: 2226  
+2023/02/14 00:55:03 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0166  data_time: 0.0011  memory: 695  
+2023/02/14 00:55:05 - mmengine - INFO - per class results:
+2023/02/14 00:55:05 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background |  98.8 | 99.24 |
+| glomeruili | 55.34 | 76.93 |
++------------+-------+-------+
+2023/02/14 00:55:05 - mmengine - INFO - Iter(val) [515/515]  aAcc: 98.8200  mIoU: 77.0700  mAcc: 88.0900
+2023/02/14 00:55:13 - mmengine - INFO - Iter(train) [10600/50000]  lr: 7.6042e-03  eta: 0:53:05  time: 0.0801  data_time: 0.0016  memory: 2226  loss: 0.0430  decode.loss_ce: 0.0314  decode.acc_seg: 95.3533  aux.loss_ce: 0.0116  aux.acc_seg: 96.3212
+2023/02/14 00:55:29 - mmengine - INFO - Iter(train) [10800/50000]  lr: 7.5582e-03  eta: 0:52:49  time: 0.0806  data_time: 0.0017  memory: 2226  loss: 0.0140  decode.loss_ce: 0.0097  decode.acc_seg: 100.0000  aux.loss_ce: 0.0043  aux.acc_seg: 100.0000
+2023/02/14 00:55:45 - mmengine - INFO - Exp name: pspnet_r50-d8_4xb2-40k_cityscapes-512x1024_20230214_003728
+2023/02/14 00:55:45 - mmengine - INFO - Iter(train) [11000/50000]  lr: 7.5122e-03  eta: 0:52:32  time: 0.0806  data_time: 0.0019  memory: 2226  loss: 0.0290  decode.loss_ce: 0.0200  decode.acc_seg: 100.0000  aux.loss_ce: 0.0090  aux.acc_seg: 100.0000
+2023/02/14 00:55:48 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0177  data_time: 0.0011  memory: 695  
+2023/02/14 00:55:52 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0169  data_time: 0.0011  memory: 695  
+2023/02/14 00:55:54 - mmengine - INFO - per class results:
+2023/02/14 00:55:54 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 99.38 | 99.65 |
+| glomeruili | 72.76 | 85.99 |
++------------+-------+-------+
+2023/02/14 00:55:54 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.3900  mIoU: 86.0700  mAcc: 92.8200
+2023/02/14 00:56:10 - mmengine - INFO - Iter(train) [11200/50000]  lr: 7.4662e-03  eta: 0:52:16  time: 0.0804  data_time: 0.0016  memory: 2226  loss: 0.0176  decode.loss_ce: 0.0122  decode.acc_seg: 99.8923  aux.loss_ce: 0.0055  aux.acc_seg: 99.8923
+2023/02/14 00:56:26 - mmengine - INFO - Iter(train) [11400/50000]  lr: 7.4202e-03  eta: 0:52:00  time: 0.0803  data_time: 0.0015  memory: 2226  loss: 0.0409  decode.loss_ce: 0.0296  decode.acc_seg: 99.6881  aux.loss_ce: 0.0113  aux.acc_seg: 99.7313
+2023/02/14 00:56:37 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0168  data_time: 0.0011  memory: 2226  
+2023/02/14 00:56:41 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0163  data_time: 0.0009  memory: 695  
+2023/02/14 00:56:43 - mmengine - INFO - per class results:
+2023/02/14 00:56:43 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 99.44 | 99.87 |
+| glomeruili | 72.88 | 77.59 |
++------------+-------+-------+
+2023/02/14 00:56:43 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.4500  mIoU: 86.1600  mAcc: 88.7300
+2023/02/14 00:56:51 - mmengine - INFO - Iter(train) [11600/50000]  lr: 7.3741e-03  eta: 0:51:43  time: 0.0805  data_time: 0.0017  memory: 2226  loss: 0.0461  decode.loss_ce: 0.0307  decode.acc_seg: 100.0000  aux.loss_ce: 0.0155  aux.acc_seg: 99.9919
+2023/02/14 00:57:07 - mmengine - INFO - Iter(train) [11800/50000]  lr: 7.3280e-03  eta: 0:51:27  time: 0.0806  data_time: 0.0019  memory: 2226  loss: 0.0282  decode.loss_ce: 0.0221  decode.acc_seg: 98.8633  aux.loss_ce: 0.0061  aux.acc_seg: 98.1715
+2023/02/14 00:57:23 - mmengine - INFO - Exp name: pspnet_r50-d8_4xb2-40k_cityscapes-512x1024_20230214_003728
+2023/02/14 00:57:23 - mmengine - INFO - Iter(train) [12000/50000]  lr: 7.2818e-03  eta: 0:51:11  time: 0.0804  data_time: 0.0019  memory: 2226  loss: 0.0250  decode.loss_ce: 0.0170  decode.acc_seg: 99.6100  aux.loss_ce: 0.0079  aux.acc_seg: 100.0000
+2023/02/14 00:57:26 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0170  data_time: 0.0011  memory: 695  
+2023/02/14 00:57:30 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0165  data_time: 0.0011  memory: 695  
+2023/02/14 00:57:32 - mmengine - INFO - per class results:
+2023/02/14 00:57:32 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 99.46 | 99.83 |
+| glomeruili | 74.23 |  80.9 |
++------------+-------+-------+
+2023/02/14 00:57:32 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.4700  mIoU: 86.8400  mAcc: 90.3600
+2023/02/14 00:57:48 - mmengine - INFO - Iter(train) [12200/50000]  lr: 7.2356e-03  eta: 0:50:54  time: 0.0804  data_time: 0.0014  memory: 2226  loss: 0.0133  decode.loss_ce: 0.0096  decode.acc_seg: 99.9823  aux.loss_ce: 0.0037  aux.acc_seg: 99.9823
+2023/02/14 00:58:04 - mmengine - INFO - Iter(train) [12400/50000]  lr: 7.1894e-03  eta: 0:50:38  time: 0.0805  data_time: 0.0015  memory: 2226  loss: 0.0140  decode.loss_ce: 0.0094  decode.acc_seg: 100.0000  aux.loss_ce: 0.0045  aux.acc_seg: 100.0000
+2023/02/14 00:58:16 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0173  data_time: 0.0011  memory: 2226  
+2023/02/14 00:58:19 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0165  data_time: 0.0010  memory: 695  
+2023/02/14 00:58:21 - mmengine - INFO - per class results:
+2023/02/14 00:58:21 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 99.06 | 99.25 |
+| glomeruili | 65.11 | 90.32 |
++------------+-------+-------+
+2023/02/14 00:58:21 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.0800  mIoU: 82.0800  mAcc: 94.7900
+2023/02/14 00:58:29 - mmengine - INFO - Iter(train) [12600/50000]  lr: 7.1431e-03  eta: 0:50:22  time: 0.0802  data_time: 0.0014  memory: 2226  loss: 0.0111  decode.loss_ce: 0.0077  decode.acc_seg: 98.9144  aux.loss_ce: 0.0034  aux.acc_seg: 99.0580
+2023/02/14 00:58:45 - mmengine - INFO - Iter(train) [12800/50000]  lr: 7.0969e-03  eta: 0:50:05  time: 0.0804  data_time: 0.0016  memory: 2226  loss: 0.0073  decode.loss_ce: 0.0051  decode.acc_seg: 99.6184  aux.loss_ce: 0.0023  aux.acc_seg: 99.6536
+2023/02/14 00:59:01 - mmengine - INFO - Exp name: pspnet_r50-d8_4xb2-40k_cityscapes-512x1024_20230214_003728
+2023/02/14 00:59:01 - mmengine - INFO - Iter(train) [13000/50000]  lr: 7.0505e-03  eta: 0:49:49  time: 0.0806  data_time: 0.0014  memory: 2226  loss: 0.0132  decode.loss_ce: 0.0093  decode.acc_seg: 100.0000  aux.loss_ce: 0.0038  aux.acc_seg: 100.0000
+2023/02/14 00:59:05 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0173  data_time: 0.0012  memory: 695  
+2023/02/14 00:59:08 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0170  data_time: 0.0011  memory: 695  
+2023/02/14 00:59:10 - mmengine - INFO - per class results:
+2023/02/14 00:59:10 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 99.44 | 99.85 |
+| glomeruili |  73.2 | 78.97 |
++------------+-------+-------+
+2023/02/14 00:59:10 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.4500  mIoU: 86.3200  mAcc: 89.4100
+2023/02/14 00:59:26 - mmengine - INFO - Iter(train) [13200/50000]  lr: 7.0042e-03  eta: 0:49:33  time: 0.0802  data_time: 0.0014  memory: 2226  loss: 0.0182  decode.loss_ce: 0.0126  decode.acc_seg: 98.4012  aux.loss_ce: 0.0056  aux.acc_seg: 98.8837
+2023/02/14 00:59:42 - mmengine - INFO - Iter(train) [13400/50000]  lr: 6.9578e-03  eta: 0:49:17  time: 0.0809  data_time: 0.0018  memory: 2226  loss: 0.0208  decode.loss_ce: 0.0130  decode.acc_seg: 99.8147  aux.loss_ce: 0.0078  aux.acc_seg: 99.7641
+2023/02/14 00:59:54 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0163  data_time: 0.0010  memory: 2226  
+2023/02/14 00:59:57 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0170  data_time: 0.0012  memory: 695  
+2023/02/14 00:59:59 - mmengine - INFO - per class results:
+2023/02/14 00:59:59 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 99.31 | 99.89 |
+| glomeruili |  65.9 | 69.66 |
++------------+-------+-------+
+2023/02/14 00:59:59 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.3100  mIoU: 82.6000  mAcc: 84.7700
+2023/02/14 01:00:07 - mmengine - INFO - Iter(train) [13600/50000]  lr: 6.9114e-03  eta: 0:49:00  time: 0.0806  data_time: 0.0017  memory: 2226  loss: 0.0166  decode.loss_ce: 0.0117  decode.acc_seg: 99.9748  aux.loss_ce: 0.0050  aux.acc_seg: 99.5558
+2023/02/14 01:00:23 - mmengine - INFO - Iter(train) [13800/50000]  lr: 6.8649e-03  eta: 0:48:44  time: 0.0808  data_time: 0.0016  memory: 2226  loss: 0.0078  decode.loss_ce: 0.0049  decode.acc_seg: 100.0000  aux.loss_ce: 0.0029  aux.acc_seg: 100.0000
+2023/02/14 01:00:39 - mmengine - INFO - Exp name: pspnet_r50-d8_4xb2-40k_cityscapes-512x1024_20230214_003728
+2023/02/14 01:00:39 - mmengine - INFO - Iter(train) [14000/50000]  lr: 6.8184e-03  eta: 0:48:28  time: 0.0804  data_time: 0.0017  memory: 2226  loss: 0.0369  decode.loss_ce: 0.0264  decode.acc_seg: 97.7842  aux.loss_ce: 0.0105  aux.acc_seg: 98.1364
+2023/02/14 01:00:43 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0175  data_time: 0.0013  memory: 695  
+2023/02/14 01:00:46 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0171  data_time: 0.0010  memory: 695  
+2023/02/14 01:00:48 - mmengine - INFO - per class results:
+2023/02/14 01:00:48 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 99.19 | 99.94 |
+| glomeruili | 59.06 | 61.03 |
++------------+-------+-------+
+2023/02/14 01:00:48 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.2000  mIoU: 79.1200  mAcc: 80.4800
+2023/02/14 01:01:04 - mmengine - INFO - Iter(train) [14200/50000]  lr: 6.7719e-03  eta: 0:48:12  time: 0.0811  data_time: 0.0019  memory: 2226  loss: 0.0198  decode.loss_ce: 0.0129  decode.acc_seg: 99.4995  aux.loss_ce: 0.0069  aux.acc_seg: 99.4995
+2023/02/14 01:01:20 - mmengine - INFO - Iter(train) [14400/50000]  lr: 6.7253e-03  eta: 0:47:55  time: 0.0806  data_time: 0.0017  memory: 2226  loss: 0.0467  decode.loss_ce: 0.0335  decode.acc_seg: 100.0000  aux.loss_ce: 0.0132  aux.acc_seg: 100.0000
+2023/02/14 01:01:32 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0169  data_time: 0.0012  memory: 2226  
+2023/02/14 01:01:35 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0176  data_time: 0.0014  memory: 695  
+2023/02/14 01:01:37 - mmengine - INFO - per class results:
+2023/02/14 01:01:37 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 99.48 | 99.81 |
+| glomeruili | 75.35 | 82.86 |
++------------+-------+-------+
+2023/02/14 01:01:37 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.4800  mIoU: 87.4200  mAcc: 91.3300
+2023/02/14 01:01:45 - mmengine - INFO - Iter(train) [14600/50000]  lr: 6.6787e-03  eta: 0:47:39  time: 0.0806  data_time: 0.0018  memory: 2226  loss: 0.0083  decode.loss_ce: 0.0054  decode.acc_seg: 100.0000  aux.loss_ce: 0.0029  aux.acc_seg: 100.0000
+2023/02/14 01:02:01 - mmengine - INFO - Iter(train) [14800/50000]  lr: 6.6321e-03  eta: 0:47:23  time: 0.0804  data_time: 0.0017  memory: 2226  loss: 0.0108  decode.loss_ce: 0.0059  decode.acc_seg: 100.0000  aux.loss_ce: 0.0049  aux.acc_seg: 100.0000
+2023/02/14 01:02:18 - mmengine - INFO - Exp name: pspnet_r50-d8_4xb2-40k_cityscapes-512x1024_20230214_003728
+2023/02/14 01:02:18 - mmengine - INFO - Iter(train) [15000/50000]  lr: 6.5854e-03  eta: 0:47:07  time: 0.0809  data_time: 0.0016  memory: 2226  loss: 0.0122  decode.loss_ce: 0.0079  decode.acc_seg: 100.0000  aux.loss_ce: 0.0043  aux.acc_seg: 100.0000
+2023/02/14 01:02:18 - mmengine - INFO - Saving checkpoint at 15000 iterations
+2023/02/14 01:02:24 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0168  data_time: 0.0010  memory: 695  
+2023/02/14 01:02:27 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0163  data_time: 0.0009  memory: 695  
+2023/02/14 01:02:29 - mmengine - INFO - per class results:
+2023/02/14 01:02:29 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 99.54 |  99.8 |
+| glomeruili | 78.44 | 86.51 |
++------------+-------+-------+
+2023/02/14 01:02:29 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.5500  mIoU: 88.9900  mAcc: 93.1600
+2023/02/14 01:02:45 - mmengine - INFO - Iter(train) [15200/50000]  lr: 6.5387e-03  eta: 0:46:50  time: 0.0810  data_time: 0.0017  memory: 2226  loss: 0.0062  decode.loss_ce: 0.0041  decode.acc_seg: 99.8363  aux.loss_ce: 0.0021  aux.acc_seg: 99.8430
+2023/02/14 01:03:01 - mmengine - INFO - Iter(train) [15400/50000]  lr: 6.4919e-03  eta: 0:46:34  time: 0.0807  data_time: 0.0020  memory: 2226  loss: 0.0093  decode.loss_ce: 0.0062  decode.acc_seg: 100.0000  aux.loss_ce: 0.0031  aux.acc_seg: 100.0000
+2023/02/14 01:03:13 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0169  data_time: 0.0010  memory: 2226  
+2023/02/14 01:03:16 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0173  data_time: 0.0011  memory: 695  
+2023/02/14 01:03:18 - mmengine - INFO - per class results:
+2023/02/14 01:03:18 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 99.51 | 99.82 |
+| glomeruili | 76.93 | 84.04 |
++------------+-------+-------+
+2023/02/14 01:03:18 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.5200  mIoU: 88.2200  mAcc: 91.9300
+2023/02/14 01:03:26 - mmengine - INFO - Iter(train) [15600/50000]  lr: 6.4451e-03  eta: 0:46:18  time: 0.0808  data_time: 0.0017  memory: 2226  loss: 0.0361  decode.loss_ce: 0.0268  decode.acc_seg: 99.5817  aux.loss_ce: 0.0093  aux.acc_seg: 99.6755
+2023/02/14 01:03:42 - mmengine - INFO - Iter(train) [15800/50000]  lr: 6.3983e-03  eta: 0:46:02  time: 0.0805  data_time: 0.0017  memory: 2226  loss: 0.0153  decode.loss_ce: 0.0094  decode.acc_seg: 100.0000  aux.loss_ce: 0.0060  aux.acc_seg: 100.0000
+2023/02/14 01:03:59 - mmengine - INFO - Exp name: pspnet_r50-d8_4xb2-40k_cityscapes-512x1024_20230214_003728
+2023/02/14 01:03:59 - mmengine - INFO - Iter(train) [16000/50000]  lr: 6.3515e-03  eta: 0:45:46  time: 0.0807  data_time: 0.0020  memory: 2226  loss: 0.0080  decode.loss_ce: 0.0054  decode.acc_seg: 100.0000  aux.loss_ce: 0.0026  aux.acc_seg: 100.0000
+2023/02/14 01:04:02 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0168  data_time: 0.0011  memory: 695  
+2023/02/14 01:04:05 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0167  data_time: 0.0012  memory: 695  
+2023/02/14 01:04:07 - mmengine - INFO - per class results:
+2023/02/14 01:04:07 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 99.39 |  99.9 |
+| glomeruili | 69.93 | 73.48 |
++------------+-------+-------+
+2023/02/14 01:04:07 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.4000  mIoU: 84.6600  mAcc: 86.6900
+2023/02/14 01:04:24 - mmengine - INFO - Iter(train) [16200/50000]  lr: 6.3045e-03  eta: 0:45:29  time: 0.0805  data_time: 0.0017  memory: 2226  loss: 0.0114  decode.loss_ce: 0.0077  decode.acc_seg: 100.0000  aux.loss_ce: 0.0037  aux.acc_seg: 100.0000
+2023/02/14 01:04:40 - mmengine - INFO - Iter(train) [16400/50000]  lr: 6.2576e-03  eta: 0:45:13  time: 0.0806  data_time: 0.0016  memory: 2226  loss: 0.0289  decode.loss_ce: 0.0204  decode.acc_seg: 100.0000  aux.loss_ce: 0.0085  aux.acc_seg: 100.0000
+2023/02/14 01:04:51 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0166  data_time: 0.0010  memory: 2226  
+2023/02/14 01:04:55 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0176  data_time: 0.0013  memory: 695  
+2023/02/14 01:04:57 - mmengine - INFO - per class results:
+2023/02/14 01:04:57 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 99.51 | 99.87 |
+| glomeruili | 76.14 | 81.24 |
++------------+-------+-------+
+2023/02/14 01:04:57 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.5200  mIoU: 87.8300  mAcc: 90.5500
+2023/02/14 01:05:05 - mmengine - INFO - Iter(train) [16600/50000]  lr: 6.2106e-03  eta: 0:44:57  time: 0.0805  data_time: 0.0014  memory: 2226  loss: 0.0131  decode.loss_ce: 0.0086  decode.acc_seg: 100.0000  aux.loss_ce: 0.0045  aux.acc_seg: 100.0000
+2023/02/14 01:05:21 - mmengine - INFO - Iter(train) [16800/50000]  lr: 6.1636e-03  eta: 0:44:41  time: 0.0810  data_time: 0.0017  memory: 2226  loss: 0.0194  decode.loss_ce: 0.0122  decode.acc_seg: 99.9889  aux.loss_ce: 0.0072  aux.acc_seg: 99.9889
+2023/02/14 01:05:37 - mmengine - INFO - Exp name: pspnet_r50-d8_4xb2-40k_cityscapes-512x1024_20230214_003728
+2023/02/14 01:05:37 - mmengine - INFO - Iter(train) [17000/50000]  lr: 6.1165e-03  eta: 0:44:25  time: 0.0804  data_time: 0.0017  memory: 2226  loss: 0.0249  decode.loss_ce: 0.0177  decode.acc_seg: 99.7559  aux.loss_ce: 0.0072  aux.acc_seg: 99.7406
+2023/02/14 01:05:40 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0174  data_time: 0.0010  memory: 695  
+2023/02/14 01:05:44 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0166  data_time: 0.0011  memory: 695  
+2023/02/14 01:05:46 - mmengine - INFO - per class results:
+2023/02/14 01:05:46 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 99.38 | 99.83 |
+| glomeruili | 70.49 | 76.66 |
++------------+-------+-------+
+2023/02/14 01:05:46 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.3900  mIoU: 84.9300  mAcc: 88.2500
+2023/02/14 01:06:02 - mmengine - INFO - Iter(train) [17200/50000]  lr: 6.0694e-03  eta: 0:44:08  time: 0.0807  data_time: 0.0016  memory: 2226  loss: 0.0216  decode.loss_ce: 0.0139  decode.acc_seg: 98.7391  aux.loss_ce: 0.0078  aux.acc_seg: 97.5682
+2023/02/14 01:06:18 - mmengine - INFO - Iter(train) [17400/50000]  lr: 6.0223e-03  eta: 0:43:52  time: 0.0802  data_time: 0.0016  memory: 2226  loss: 0.0086  decode.loss_ce: 0.0053  decode.acc_seg: 99.8810  aux.loss_ce: 0.0033  aux.acc_seg: 99.8819
+2023/02/14 01:06:29 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0171  data_time: 0.0011  memory: 2226  
+2023/02/14 01:06:33 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0171  data_time: 0.0011  memory: 695  
+2023/02/14 01:06:35 - mmengine - INFO - per class results:
+2023/02/14 01:06:35 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 99.28 | 99.85 |
+| glomeruili | 64.98 | 69.87 |
++------------+-------+-------+
+2023/02/14 01:06:35 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.2800  mIoU: 82.1300  mAcc: 84.8600
+2023/02/14 01:06:43 - mmengine - INFO - Iter(train) [17600/50000]  lr: 5.9751e-03  eta: 0:43:36  time: 0.0803  data_time: 0.0019  memory: 2226  loss: 0.0284  decode.loss_ce: 0.0196  decode.acc_seg: 100.0000  aux.loss_ce: 0.0089  aux.acc_seg: 100.0000
+2023/02/14 01:06:59 - mmengine - INFO - Iter(train) [17800/50000]  lr: 5.9279e-03  eta: 0:43:20  time: 0.0807  data_time: 0.0017  memory: 2226  loss: 0.0151  decode.loss_ce: 0.0101  decode.acc_seg: 99.4644  aux.loss_ce: 0.0049  aux.acc_seg: 99.4526
+2023/02/14 01:07:15 - mmengine - INFO - Exp name: pspnet_r50-d8_4xb2-40k_cityscapes-512x1024_20230214_003728
+2023/02/14 01:07:15 - mmengine - INFO - Iter(train) [18000/50000]  lr: 5.8806e-03  eta: 0:43:04  time: 0.0805  data_time: 0.0017  memory: 2226  loss: 0.0224  decode.loss_ce: 0.0160  decode.acc_seg: 99.7391  aux.loss_ce: 0.0064  aux.acc_seg: 99.7144
+2023/02/14 01:07:19 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0173  data_time: 0.0012  memory: 695  
+2023/02/14 01:07:22 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0164  data_time: 0.0009  memory: 695  
+2023/02/14 01:07:24 - mmengine - INFO - per class results:
+2023/02/14 01:07:24 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 99.12 | 99.34 |
+| glomeruili | 66.23 | 88.94 |
++------------+-------+-------+
+2023/02/14 01:07:24 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.1400  mIoU: 82.6800  mAcc: 94.1400
+2023/02/14 01:07:40 - mmengine - INFO - Iter(train) [18200/50000]  lr: 5.8333e-03  eta: 0:42:47  time: 0.0804  data_time: 0.0017  memory: 2226  loss: 0.0083  decode.loss_ce: 0.0060  decode.acc_seg: 100.0000  aux.loss_ce: 0.0023  aux.acc_seg: 100.0000
+2023/02/14 01:07:56 - mmengine - INFO - Iter(train) [18400/50000]  lr: 5.7859e-03  eta: 0:42:31  time: 0.0809  data_time: 0.0016  memory: 2226  loss: 0.0123  decode.loss_ce: 0.0087  decode.acc_seg: 99.6550  aux.loss_ce: 0.0035  aux.acc_seg: 99.6559
+2023/02/14 01:08:08 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0162  data_time: 0.0010  memory: 2226  
+2023/02/14 01:08:11 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0170  data_time: 0.0010  memory: 695  
+2023/02/14 01:08:13 - mmengine - INFO - per class results:
+2023/02/14 01:08:13 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 99.46 | 99.87 |
+| glomeruili |  73.7 | 78.65 |
++------------+-------+-------+
+2023/02/14 01:08:13 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.4700  mIoU: 86.5800  mAcc: 89.2600
+2023/02/14 01:08:21 - mmengine - INFO - Iter(train) [18600/50000]  lr: 5.7385e-03  eta: 0:42:15  time: 0.0805  data_time: 0.0016  memory: 2226  loss: 0.0195  decode.loss_ce: 0.0110  decode.acc_seg: 99.3296  aux.loss_ce: 0.0085  aux.acc_seg: 99.3745
+2023/02/14 01:08:37 - mmengine - INFO - Iter(train) [18800/50000]  lr: 5.6910e-03  eta: 0:41:59  time: 0.0810  data_time: 0.0015  memory: 2226  loss: 0.0221  decode.loss_ce: 0.0146  decode.acc_seg: 100.0000  aux.loss_ce: 0.0075  aux.acc_seg: 100.0000
+2023/02/14 01:08:53 - mmengine - INFO - Exp name: pspnet_r50-d8_4xb2-40k_cityscapes-512x1024_20230214_003728
+2023/02/14 01:08:53 - mmengine - INFO - Iter(train) [19000/50000]  lr: 5.6436e-03  eta: 0:41:43  time: 0.0804  data_time: 0.0016  memory: 2226  loss: 0.0065  decode.loss_ce: 0.0042  decode.acc_seg: 99.9384  aux.loss_ce: 0.0023  aux.acc_seg: 99.8274
+2023/02/14 01:08:57 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0173  data_time: 0.0013  memory: 695  
+2023/02/14 01:09:00 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0165  data_time: 0.0009  memory: 695  
+2023/02/14 01:09:02 - mmengine - INFO - per class results:
+2023/02/14 01:09:02 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background |  99.4 | 99.83 |
+| glomeruili | 71.62 | 78.06 |
++------------+-------+-------+
+2023/02/14 01:09:02 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.4100  mIoU: 85.5100  mAcc: 88.9400
+2023/02/14 01:09:18 - mmengine - INFO - Iter(train) [19200/50000]  lr: 5.5960e-03  eta: 0:41:26  time: 0.0805  data_time: 0.0014  memory: 2226  loss: 0.0183  decode.loss_ce: 0.0126  decode.acc_seg: 100.0000  aux.loss_ce: 0.0057  aux.acc_seg: 100.0000
+2023/02/14 01:09:34 - mmengine - INFO - Iter(train) [19400/50000]  lr: 5.5484e-03  eta: 0:41:10  time: 0.0808  data_time: 0.0018  memory: 2226  loss: 0.0101  decode.loss_ce: 0.0060  decode.acc_seg: 99.8325  aux.loss_ce: 0.0042  aux.acc_seg: 99.7781
+2023/02/14 01:09:46 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0172  data_time: 0.0011  memory: 2226  
+2023/02/14 01:09:49 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0170  data_time: 0.0012  memory: 695  
+2023/02/14 01:09:51 - mmengine - INFO - per class results:
+2023/02/14 01:09:51 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 99.24 | 99.91 |
+| glomeruili | 62.04 | 64.81 |
++------------+-------+-------+
+2023/02/14 01:09:51 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.2500  mIoU: 80.6400  mAcc: 82.3600
+2023/02/14 01:09:59 - mmengine - INFO - Iter(train) [19600/50000]  lr: 5.5008e-03  eta: 0:40:54  time: 0.0805  data_time: 0.0018  memory: 2226  loss: 0.0171  decode.loss_ce: 0.0117  decode.acc_seg: 100.0000  aux.loss_ce: 0.0054  aux.acc_seg: 100.0000
+2023/02/14 01:10:15 - mmengine - INFO - Iter(train) [19800/50000]  lr: 5.4531e-03  eta: 0:40:38  time: 0.0802  data_time: 0.0019  memory: 2226  loss: 0.0069  decode.loss_ce: 0.0046  decode.acc_seg: 100.0000  aux.loss_ce: 0.0024  aux.acc_seg: 100.0000
+2023/02/14 01:10:31 - mmengine - INFO - Exp name: pspnet_r50-d8_4xb2-40k_cityscapes-512x1024_20230214_003728
+2023/02/14 01:10:31 - mmengine - INFO - Iter(train) [20000/50000]  lr: 5.4054e-03  eta: 0:40:22  time: 0.0805  data_time: 0.0016  memory: 2226  loss: 0.0206  decode.loss_ce: 0.0129  decode.acc_seg: 96.3907  aux.loss_ce: 0.0077  aux.acc_seg: 95.2125
+2023/02/14 01:10:31 - mmengine - INFO - Saving checkpoint at 20000 iterations
+2023/02/14 01:10:37 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0166  data_time: 0.0012  memory: 695  
+2023/02/14 01:10:41 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0169  data_time: 0.0010  memory: 695  
+2023/02/14 01:10:43 - mmengine - INFO - per class results:
+2023/02/14 01:10:43 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 99.47 | 99.69 |
+| glomeruili | 76.11 | 88.09 |
++------------+-------+-------+
+2023/02/14 01:10:43 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.4700  mIoU: 87.7900  mAcc: 93.8900
+2023/02/14 01:10:59 - mmengine - INFO - Iter(train) [20200/50000]  lr: 5.3576e-03  eta: 0:40:05  time: 0.0805  data_time: 0.0016  memory: 2226  loss: 0.0432  decode.loss_ce: 0.0286  decode.acc_seg: 99.7748  aux.loss_ce: 0.0146  aux.acc_seg: 99.8018
+2023/02/14 01:11:15 - mmengine - INFO - Iter(train) [20400/50000]  lr: 5.3098e-03  eta: 0:39:49  time: 0.0806  data_time: 0.0016  memory: 2226  loss: 0.0084  decode.loss_ce: 0.0055  decode.acc_seg: 100.0000  aux.loss_ce: 0.0029  aux.acc_seg: 99.9992
+2023/02/14 01:11:26 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0169  data_time: 0.0010  memory: 2226  
+2023/02/14 01:11:30 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0166  data_time: 0.0014  memory: 695  
+2023/02/14 01:11:32 - mmengine - INFO - per class results:
+2023/02/14 01:11:32 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 99.42 | 99.68 |
+| glomeruili | 74.39 | 86.73 |
++------------+-------+-------+
+2023/02/14 01:11:32 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.4300  mIoU: 86.9000  mAcc: 93.2000
+2023/02/14 01:11:40 - mmengine - INFO - Iter(train) [20600/50000]  lr: 5.2619e-03  eta: 0:39:33  time: 0.0806  data_time: 0.0017  memory: 2226  loss: 0.0181  decode.loss_ce: 0.0120  decode.acc_seg: 100.0000  aux.loss_ce: 0.0061  aux.acc_seg: 100.0000
+2023/02/14 01:11:56 - mmengine - INFO - Iter(train) [20800/50000]  lr: 5.2140e-03  eta: 0:39:17  time: 0.0802  data_time: 0.0018  memory: 2226  loss: 0.0129  decode.loss_ce: 0.0080  decode.acc_seg: 100.0000  aux.loss_ce: 0.0050  aux.acc_seg: 100.0000
+2023/02/14 01:12:12 - mmengine - INFO - Exp name: pspnet_r50-d8_4xb2-40k_cityscapes-512x1024_20230214_003728
+2023/02/14 01:12:12 - mmengine - INFO - Iter(train) [21000/50000]  lr: 5.1660e-03  eta: 0:39:01  time: 0.0806  data_time: 0.0017  memory: 2226  loss: 0.0162  decode.loss_ce: 0.0104  decode.acc_seg: 99.9924  aux.loss_ce: 0.0057  aux.acc_seg: 99.9924
+2023/02/14 01:12:15 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0166  data_time: 0.0011  memory: 695  
+2023/02/14 01:12:19 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0169  data_time: 0.0011  memory: 695  
+2023/02/14 01:12:21 - mmengine - INFO - per class results:
+2023/02/14 01:12:21 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 99.46 | 99.81 |
+| glomeruili |  74.4 | 81.81 |
++------------+-------+-------+
+2023/02/14 01:12:21 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.4700  mIoU: 86.9300  mAcc: 90.8100
+2023/02/14 01:12:37 - mmengine - INFO - Iter(train) [21200/50000]  lr: 5.1180e-03  eta: 0:38:44  time: 0.0802  data_time: 0.0018  memory: 2226  loss: 0.0128  decode.loss_ce: 0.0081  decode.acc_seg: 99.9778  aux.loss_ce: 0.0047  aux.acc_seg: 99.9778
+2023/02/14 01:12:53 - mmengine - INFO - Iter(train) [21400/50000]  lr: 5.0700e-03  eta: 0:38:28  time: 0.0805  data_time: 0.0019  memory: 2226  loss: 0.0091  decode.loss_ce: 0.0061  decode.acc_seg: 98.7394  aux.loss_ce: 0.0030  aux.acc_seg: 98.8470
+2023/02/14 01:13:04 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0176  data_time: 0.0012  memory: 2226  
+2023/02/14 01:13:08 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0171  data_time: 0.0012  memory: 695  
+2023/02/14 01:13:10 - mmengine - INFO - per class results:
+2023/02/14 01:13:10 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 99.51 | 99.77 |
+| glomeruili | 77.39 | 86.74 |
++------------+-------+-------+
+2023/02/14 01:13:10 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.5200  mIoU: 88.4500  mAcc: 93.2500
+2023/02/14 01:13:18 - mmengine - INFO - Iter(train) [21600/50000]  lr: 5.0218e-03  eta: 0:38:12  time: 0.0806  data_time: 0.0017  memory: 2226  loss: 0.0278  decode.loss_ce: 0.0199  decode.acc_seg: 99.8782  aux.loss_ce: 0.0079  aux.acc_seg: 99.5749
+2023/02/14 01:13:34 - mmengine - INFO - Iter(train) [21800/50000]  lr: 4.9737e-03  eta: 0:37:56  time: 0.0805  data_time: 0.0018  memory: 2226  loss: 0.0081  decode.loss_ce: 0.0054  decode.acc_seg: 99.7380  aux.loss_ce: 0.0027  aux.acc_seg: 99.3571
+2023/02/14 01:13:50 - mmengine - INFO - Exp name: pspnet_r50-d8_4xb2-40k_cityscapes-512x1024_20230214_003728
+2023/02/14 01:13:50 - mmengine - INFO - Iter(train) [22000/50000]  lr: 4.9254e-03  eta: 0:37:40  time: 0.0808  data_time: 0.0019  memory: 2226  loss: 0.0062  decode.loss_ce: 0.0040  decode.acc_seg: 99.5220  aux.loss_ce: 0.0022  aux.acc_seg: 99.5249
+2023/02/14 01:13:53 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0167  data_time: 0.0011  memory: 695  
+2023/02/14 01:13:57 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0163  data_time: 0.0011  memory: 695  
+2023/02/14 01:13:59 - mmengine - INFO - per class results:
+2023/02/14 01:13:59 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 99.55 | 99.77 |
+| glomeruili | 79.01 | 88.25 |
++------------+-------+-------+
+2023/02/14 01:13:59 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.5500  mIoU: 89.2800  mAcc: 94.0100
+2023/02/14 01:14:15 - mmengine - INFO - Iter(train) [22200/50000]  lr: 4.8772e-03  eta: 0:37:23  time: 0.0808  data_time: 0.0016  memory: 2226  loss: 0.0067  decode.loss_ce: 0.0045  decode.acc_seg: 99.7137  aux.loss_ce: 0.0022  aux.acc_seg: 99.7469
+2023/02/14 01:14:31 - mmengine - INFO - Iter(train) [22400/50000]  lr: 4.8288e-03  eta: 0:37:07  time: 0.0805  data_time: 0.0019  memory: 2226  loss: 0.0068  decode.loss_ce: 0.0046  decode.acc_seg: 98.0158  aux.loss_ce: 0.0021  aux.acc_seg: 98.4338
+2023/02/14 01:14:43 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0172  data_time: 0.0012  memory: 2226  
+2023/02/14 01:14:46 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0172  data_time: 0.0011  memory: 695  
+2023/02/14 01:14:48 - mmengine - INFO - per class results:
+2023/02/14 01:14:48 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 99.55 | 99.85 |
+| glomeruili | 78.26 | 84.22 |
++------------+-------+-------+
+2023/02/14 01:14:48 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.5600  mIoU: 88.9000  mAcc: 92.0400
+2023/02/14 01:14:56 - mmengine - INFO - Iter(train) [22600/50000]  lr: 4.7804e-03  eta: 0:36:51  time: 0.0807  data_time: 0.0017  memory: 2226  loss: 0.0073  decode.loss_ce: 0.0048  decode.acc_seg: 100.0000  aux.loss_ce: 0.0024  aux.acc_seg: 100.0000
+2023/02/14 01:15:12 - mmengine - INFO - Iter(train) [22800/50000]  lr: 4.7320e-03  eta: 0:36:35  time: 0.0802  data_time: 0.0016  memory: 2226  loss: 0.0110  decode.loss_ce: 0.0075  decode.acc_seg: 100.0000  aux.loss_ce: 0.0036  aux.acc_seg: 100.0000
+2023/02/14 01:15:28 - mmengine - INFO - Exp name: pspnet_r50-d8_4xb2-40k_cityscapes-512x1024_20230214_003728
+2023/02/14 01:15:28 - mmengine - INFO - Iter(train) [23000/50000]  lr: 4.6835e-03  eta: 0:36:19  time: 0.0806  data_time: 0.0017  memory: 2226  loss: 0.0209  decode.loss_ce: 0.0144  decode.acc_seg: 99.1722  aux.loss_ce: 0.0065  aux.acc_seg: 99.3595
+2023/02/14 01:15:32 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0178  data_time: 0.0011  memory: 695  
+2023/02/14 01:15:35 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0168  data_time: 0.0010  memory: 695  
+2023/02/14 01:15:37 - mmengine - INFO - per class results:
+2023/02/14 01:15:37 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 99.44 | 99.63 |
+| glomeruili | 75.74 | 90.07 |
++------------+-------+-------+
+2023/02/14 01:15:37 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.4500  mIoU: 87.5900  mAcc: 94.8500
+2023/02/14 01:15:53 - mmengine - INFO - Iter(train) [23200/50000]  lr: 4.6349e-03  eta: 0:36:02  time: 0.0804  data_time: 0.0018  memory: 2226  loss: 0.0161  decode.loss_ce: 0.0098  decode.acc_seg: 99.0349  aux.loss_ce: 0.0063  aux.acc_seg: 92.3170
+2023/02/14 01:16:09 - mmengine - INFO - Iter(train) [23400/50000]  lr: 4.5863e-03  eta: 0:35:46  time: 0.0805  data_time: 0.0019  memory: 2226  loss: 0.0091  decode.loss_ce: 0.0064  decode.acc_seg: 100.0000  aux.loss_ce: 0.0027  aux.acc_seg: 100.0000
+2023/02/14 01:16:21 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0171  data_time: 0.0010  memory: 2226  
+2023/02/14 01:16:24 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0173  data_time: 0.0013  memory: 695  
+2023/02/14 01:16:26 - mmengine - INFO - per class results:
+2023/02/14 01:16:26 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 99.51 | 99.77 |
+| glomeruili | 77.56 | 86.94 |
++------------+-------+-------+
+2023/02/14 01:16:26 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.5200  mIoU: 88.5300  mAcc: 93.3500
+2023/02/14 01:16:34 - mmengine - INFO - Iter(train) [23600/50000]  lr: 4.5376e-03  eta: 0:35:30  time: 0.0805  data_time: 0.0019  memory: 2226  loss: 0.0115  decode.loss_ce: 0.0082  decode.acc_seg: 98.8312  aux.loss_ce: 0.0033  aux.acc_seg: 98.8094
+2023/02/14 01:16:50 - mmengine - INFO - Iter(train) [23800/50000]  lr: 4.4889e-03  eta: 0:35:14  time: 0.0802  data_time: 0.0015  memory: 2226  loss: 0.0127  decode.loss_ce: 0.0085  decode.acc_seg: 99.6209  aux.loss_ce: 0.0042  aux.acc_seg: 99.6297
+2023/02/14 01:17:06 - mmengine - INFO - Exp name: pspnet_r50-d8_4xb2-40k_cityscapes-512x1024_20230214_003728
+2023/02/14 01:17:06 - mmengine - INFO - Iter(train) [24000/50000]  lr: 4.4401e-03  eta: 0:34:58  time: 0.0804  data_time: 0.0017  memory: 2226  loss: 0.0358  decode.loss_ce: 0.0249  decode.acc_seg: 97.8782  aux.loss_ce: 0.0108  aux.acc_seg: 99.0787
+2023/02/14 01:17:10 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0167  data_time: 0.0011  memory: 695  
+2023/02/14 01:17:13 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0171  data_time: 0.0012  memory: 695  
+2023/02/14 01:17:15 - mmengine - INFO - per class results:
+2023/02/14 01:17:15 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 98.76 | 99.23 |
+| glomeruili | 53.92 | 75.48 |
++------------+-------+-------+
+2023/02/14 01:17:15 - mmengine - INFO - Iter(val) [515/515]  aAcc: 98.7700  mIoU: 76.3400  mAcc: 87.3500
+2023/02/14 01:17:31 - mmengine - INFO - Iter(train) [24200/50000]  lr: 4.3912e-03  eta: 0:34:41  time: 0.0809  data_time: 0.0018  memory: 2226  loss: 0.0198  decode.loss_ce: 0.0143  decode.acc_seg: 98.4482  aux.loss_ce: 0.0055  aux.acc_seg: 98.7228
+2023/02/14 01:17:47 - mmengine - INFO - Iter(train) [24400/50000]  lr: 4.3423e-03  eta: 0:34:25  time: 0.0802  data_time: 0.0018  memory: 2226  loss: 0.0128  decode.loss_ce: 0.0084  decode.acc_seg: 99.0660  aux.loss_ce: 0.0044  aux.acc_seg: 99.5471
+2023/02/14 01:17:59 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0170  data_time: 0.0011  memory: 2226  
+2023/02/14 01:18:02 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0170  data_time: 0.0010  memory: 695  
+2023/02/14 01:18:04 - mmengine - INFO - per class results:
+2023/02/14 01:18:04 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 99.51 | 99.83 |
+| glomeruili |  76.5 | 83.08 |
++------------+-------+-------+
+2023/02/14 01:18:04 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.5200  mIoU: 88.0000  mAcc: 91.4500
+2023/02/14 01:18:12 - mmengine - INFO - Iter(train) [24600/50000]  lr: 4.2933e-03  eta: 0:34:09  time: 0.0802  data_time: 0.0018  memory: 2226  loss: 0.0108  decode.loss_ce: 0.0069  decode.acc_seg: 99.3606  aux.loss_ce: 0.0039  aux.acc_seg: 99.1612
+2023/02/14 01:18:28 - mmengine - INFO - Iter(train) [24800/50000]  lr: 4.2443e-03  eta: 0:33:53  time: 0.0802  data_time: 0.0016  memory: 2226  loss: 0.0051  decode.loss_ce: 0.0033  decode.acc_seg: 100.0000  aux.loss_ce: 0.0018  aux.acc_seg: 100.0000
+2023/02/14 01:18:44 - mmengine - INFO - Exp name: pspnet_r50-d8_4xb2-40k_cityscapes-512x1024_20230214_003728
+2023/02/14 01:18:44 - mmengine - INFO - Iter(train) [25000/50000]  lr: 4.1952e-03  eta: 0:33:37  time: 0.0804  data_time: 0.0019  memory: 2226  loss: 0.0051  decode.loss_ce: 0.0035  decode.acc_seg: 99.2616  aux.loss_ce: 0.0016  aux.acc_seg: 99.2616
+2023/02/14 01:18:44 - mmengine - INFO - Saving checkpoint at 25000 iterations
+2023/02/14 01:18:50 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0171  data_time: 0.0010  memory: 695  
+2023/02/14 01:18:54 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0166  data_time: 0.0011  memory: 695  
+2023/02/14 01:18:56 - mmengine - INFO - per class results:
+2023/02/14 01:18:56 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 99.52 | 99.75 |
+| glomeruili | 78.12 | 88.05 |
++------------+-------+-------+
+2023/02/14 01:18:56 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.5300  mIoU: 88.8200  mAcc: 93.9000
+2023/02/14 01:19:12 - mmengine - INFO - Iter(train) [25200/50000]  lr: 4.1460e-03  eta: 0:33:21  time: 0.0803  data_time: 0.0017  memory: 2226  loss: 0.0077  decode.loss_ce: 0.0055  decode.acc_seg: 100.0000  aux.loss_ce: 0.0023  aux.acc_seg: 100.0000
+2023/02/14 01:19:28 - mmengine - INFO - Iter(train) [25400/50000]  lr: 4.0968e-03  eta: 0:33:04  time: 0.0806  data_time: 0.0018  memory: 2226  loss: 0.0116  decode.loss_ce: 0.0082  decode.acc_seg: 100.0000  aux.loss_ce: 0.0034  aux.acc_seg: 100.0000
+2023/02/14 01:19:40 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0170  data_time: 0.0013  memory: 2226  
+2023/02/14 01:19:43 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0168  data_time: 0.0010  memory: 695  
+2023/02/14 01:19:45 - mmengine - INFO - per class results:
+2023/02/14 01:19:45 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 99.51 | 99.82 |
+| glomeruili | 76.74 | 83.86 |
++------------+-------+-------+
+2023/02/14 01:19:45 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.5200  mIoU: 88.1200  mAcc: 91.8400
+2023/02/14 01:19:53 - mmengine - INFO - Iter(train) [25600/50000]  lr: 4.0475e-03  eta: 0:32:48  time: 0.0802  data_time: 0.0018  memory: 2226  loss: 0.0096  decode.loss_ce: 0.0062  decode.acc_seg: 99.8834  aux.loss_ce: 0.0034  aux.acc_seg: 99.8962
+2023/02/14 01:20:09 - mmengine - INFO - Iter(train) [25800/50000]  lr: 3.9981e-03  eta: 0:32:32  time: 0.0806  data_time: 0.0017  memory: 2226  loss: 0.0163  decode.loss_ce: 0.0110  decode.acc_seg: 99.9626  aux.loss_ce: 0.0052  aux.acc_seg: 100.0000
+2023/02/14 01:20:25 - mmengine - INFO - Exp name: pspnet_r50-d8_4xb2-40k_cityscapes-512x1024_20230214_003728
+2023/02/14 01:20:25 - mmengine - INFO - Iter(train) [26000/50000]  lr: 3.9486e-03  eta: 0:32:16  time: 0.0804  data_time: 0.0017  memory: 2226  loss: 0.0090  decode.loss_ce: 0.0057  decode.acc_seg: 99.6777  aux.loss_ce: 0.0033  aux.acc_seg: 99.6713
+2023/02/14 01:20:29 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0171  data_time: 0.0011  memory: 695  
+2023/02/14 01:20:32 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0177  data_time: 0.0013  memory: 695  
+2023/02/14 01:20:34 - mmengine - INFO - per class results:
+2023/02/14 01:20:34 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 99.48 | 99.83 |
+| glomeruili | 75.11 | 81.66 |
++------------+-------+-------+
+2023/02/14 01:20:34 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.4900  mIoU: 87.3000  mAcc: 90.7500
+2023/02/14 01:20:50 - mmengine - INFO - Iter(train) [26200/50000]  lr: 3.8991e-03  eta: 0:32:00  time: 0.0802  data_time: 0.0018  memory: 2226  loss: 0.0073  decode.loss_ce: 0.0048  decode.acc_seg: 99.7813  aux.loss_ce: 0.0025  aux.acc_seg: 99.6464
+2023/02/14 01:21:06 - mmengine - INFO - Iter(train) [26400/50000]  lr: 3.8495e-03  eta: 0:31:44  time: 0.0802  data_time: 0.0019  memory: 2226  loss: 0.0075  decode.loss_ce: 0.0050  decode.acc_seg: 100.0000  aux.loss_ce: 0.0025  aux.acc_seg: 100.0000
+2023/02/14 01:21:18 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0171  data_time: 0.0011  memory: 2226  
+2023/02/14 01:21:21 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0167  data_time: 0.0011  memory: 695  
+2023/02/14 01:21:23 - mmengine - INFO - per class results:
+2023/02/14 01:21:23 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 99.55 | 99.75 |
+| glomeruili | 79.48 | 89.56 |
++------------+-------+-------+
+2023/02/14 01:21:23 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.5600  mIoU: 89.5200  mAcc: 94.6600
+2023/02/14 01:21:31 - mmengine - INFO - Iter(train) [26600/50000]  lr: 3.7999e-03  eta: 0:31:27  time: 0.0804  data_time: 0.0019  memory: 2226  loss: 0.0137  decode.loss_ce: 0.0092  decode.acc_seg: 99.6173  aux.loss_ce: 0.0045  aux.acc_seg: 99.7175
+2023/02/14 01:21:47 - mmengine - INFO - Iter(train) [26800/50000]  lr: 3.7501e-03  eta: 0:31:11  time: 0.0807  data_time: 0.0019  memory: 2226  loss: 0.0096  decode.loss_ce: 0.0064  decode.acc_seg: 98.9010  aux.loss_ce: 0.0032  aux.acc_seg: 98.9166
+2023/02/14 01:22:03 - mmengine - INFO - Exp name: pspnet_r50-d8_4xb2-40k_cityscapes-512x1024_20230214_003728
+2023/02/14 01:22:03 - mmengine - INFO - Iter(train) [27000/50000]  lr: 3.7003e-03  eta: 0:30:55  time: 0.0810  data_time: 0.0018  memory: 2226  loss: 0.0069  decode.loss_ce: 0.0048  decode.acc_seg: 100.0000  aux.loss_ce: 0.0021  aux.acc_seg: 100.0000
+2023/02/14 01:22:07 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0171  data_time: 0.0010  memory: 695  
+2023/02/14 01:22:10 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0170  data_time: 0.0010  memory: 695  
+2023/02/14 01:22:12 - mmengine - INFO - per class results:
+2023/02/14 01:22:12 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 99.55 | 99.77 |
+| glomeruili | 79.29 | 88.77 |
++------------+-------+-------+
+2023/02/14 01:22:12 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.5600  mIoU: 89.4200  mAcc: 94.2700
+2023/02/14 01:22:28 - mmengine - INFO - Iter(train) [27200/50000]  lr: 3.6504e-03  eta: 0:30:39  time: 0.0802  data_time: 0.0017  memory: 2226  loss: 0.0132  decode.loss_ce: 0.0092  decode.acc_seg: 100.0000  aux.loss_ce: 0.0040  aux.acc_seg: 100.0000
+2023/02/14 01:22:45 - mmengine - INFO - Iter(train) [27400/50000]  lr: 3.6005e-03  eta: 0:30:23  time: 0.0808  data_time: 0.0015  memory: 2226  loss: 0.0137  decode.loss_ce: 0.0067  decode.acc_seg: 100.0000  aux.loss_ce: 0.0069  aux.acc_seg: 100.0000
+2023/02/14 01:22:56 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0176  data_time: 0.0012  memory: 2226  
+2023/02/14 01:22:59 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0170  data_time: 0.0011  memory: 695  
+2023/02/14 01:23:01 - mmengine - INFO - per class results:
+2023/02/14 01:23:01 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 99.53 | 99.87 |
+| glomeruili | 77.25 | 82.49 |
++------------+-------+-------+
+2023/02/14 01:23:01 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.5400  mIoU: 88.3900  mAcc: 91.1800
+2023/02/14 01:23:09 - mmengine - INFO - Iter(train) [27600/50000]  lr: 3.5504e-03  eta: 0:30:07  time: 0.0808  data_time: 0.0017  memory: 2226  loss: 0.0115  decode.loss_ce: 0.0076  decode.acc_seg: 98.7515  aux.loss_ce: 0.0039  aux.acc_seg: 98.6071
+2023/02/14 01:23:26 - mmengine - INFO - Iter(train) [27800/50000]  lr: 3.5003e-03  eta: 0:29:51  time: 0.0809  data_time: 0.0017  memory: 2226  loss: 0.0091  decode.loss_ce: 0.0054  decode.acc_seg: 100.0000  aux.loss_ce: 0.0037  aux.acc_seg: 100.0000
+2023/02/14 01:23:42 - mmengine - INFO - Exp name: pspnet_r50-d8_4xb2-40k_cityscapes-512x1024_20230214_003728
+2023/02/14 01:23:42 - mmengine - INFO - Iter(train) [28000/50000]  lr: 3.4501e-03  eta: 0:29:34  time: 0.0806  data_time: 0.0016  memory: 2226  loss: 0.0197  decode.loss_ce: 0.0099  decode.acc_seg: 99.9570  aux.loss_ce: 0.0098  aux.acc_seg: 99.9570
+2023/02/14 01:23:45 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0173  data_time: 0.0012  memory: 695  
+2023/02/14 01:23:49 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0170  data_time: 0.0012  memory: 695  
+2023/02/14 01:23:51 - mmengine - INFO - per class results:
+2023/02/14 01:23:51 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 99.53 | 99.73 |
+| glomeruili | 78.59 | 89.66 |
++------------+-------+-------+
+2023/02/14 01:23:51 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.5400  mIoU: 89.0600  mAcc: 94.6900
+2023/02/14 01:24:07 - mmengine - INFO - Iter(train) [28200/50000]  lr: 3.3998e-03  eta: 0:29:18  time: 0.0804  data_time: 0.0019  memory: 2226  loss: 0.0169  decode.loss_ce: 0.0116  decode.acc_seg: 98.3583  aux.loss_ce: 0.0054  aux.acc_seg: 98.9085
+2023/02/14 01:24:23 - mmengine - INFO - Iter(train) [28400/50000]  lr: 3.3494e-03  eta: 0:29:02  time: 0.0806  data_time: 0.0017  memory: 2226  loss: 0.0056  decode.loss_ce: 0.0038  decode.acc_seg: 100.0000  aux.loss_ce: 0.0018  aux.acc_seg: 100.0000
+2023/02/14 01:24:34 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0180  data_time: 0.0012  memory: 2226  
+2023/02/14 01:24:38 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0173  data_time: 0.0012  memory: 695  
+2023/02/14 01:24:40 - mmengine - INFO - per class results:
+2023/02/14 01:24:40 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 99.53 | 99.75 |
+| glomeruili | 78.66 |  89.0 |
++------------+-------+-------+
+2023/02/14 01:24:40 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.5400  mIoU: 89.1000  mAcc: 94.3700
+2023/02/14 01:24:48 - mmengine - INFO - Iter(train) [28600/50000]  lr: 3.2989e-03  eta: 0:28:46  time: 0.0811  data_time: 0.0018  memory: 2226  loss: 0.0045  decode.loss_ce: 0.0029  decode.acc_seg: 99.9546  aux.loss_ce: 0.0016  aux.acc_seg: 99.9245
+2023/02/14 01:25:04 - mmengine - INFO - Iter(train) [28800/50000]  lr: 3.2484e-03  eta: 0:28:30  time: 0.0804  data_time: 0.0018  memory: 2226  loss: 0.0104  decode.loss_ce: 0.0068  decode.acc_seg: 99.2482  aux.loss_ce: 0.0035  aux.acc_seg: 99.1093
+2023/02/14 01:25:20 - mmengine - INFO - Exp name: pspnet_r50-d8_4xb2-40k_cityscapes-512x1024_20230214_003728
+2023/02/14 01:25:20 - mmengine - INFO - Iter(train) [29000/50000]  lr: 3.1977e-03  eta: 0:28:14  time: 0.0808  data_time: 0.0018  memory: 2226  loss: 0.0177  decode.loss_ce: 0.0123  decode.acc_seg: 99.9886  aux.loss_ce: 0.0054  aux.acc_seg: 100.0000
+2023/02/14 01:25:24 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0170  data_time: 0.0010  memory: 695  
+2023/02/14 01:25:27 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0166  data_time: 0.0009  memory: 695  
+2023/02/14 01:25:29 - mmengine - INFO - per class results:
+2023/02/14 01:25:29 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 99.57 |  99.8 |
+| glomeruili | 79.62 | 87.64 |
++------------+-------+-------+
+2023/02/14 01:25:29 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.5700  mIoU: 89.5900  mAcc: 93.7200
+2023/02/14 01:25:45 - mmengine - INFO - Iter(train) [29200/50000]  lr: 3.1470e-03  eta: 0:27:58  time: 0.0811  data_time: 0.0019  memory: 2226  loss: 0.0082  decode.loss_ce: 0.0049  decode.acc_seg: 99.7191  aux.loss_ce: 0.0033  aux.acc_seg: 99.0025
+2023/02/14 01:26:01 - mmengine - INFO - Iter(train) [29400/50000]  lr: 3.0962e-03  eta: 0:27:41  time: 0.0804  data_time: 0.0017  memory: 2226  loss: 0.0074  decode.loss_ce: 0.0052  decode.acc_seg: 98.8610  aux.loss_ce: 0.0021  aux.acc_seg: 98.9680
+2023/02/14 01:26:13 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0171  data_time: 0.0012  memory: 2226  
+2023/02/14 01:26:16 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0166  data_time: 0.0010  memory: 695  
+2023/02/14 01:26:18 - mmengine - INFO - per class results:
+2023/02/14 01:26:18 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 99.56 | 99.79 |
+| glomeruili | 79.72 | 88.52 |
++------------+-------+-------+
+2023/02/14 01:26:18 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.5700  mIoU: 89.6400  mAcc: 94.1500
+2023/02/14 01:26:26 - mmengine - INFO - Iter(train) [29600/50000]  lr: 3.0452e-03  eta: 0:27:25  time: 0.0808  data_time: 0.0018  memory: 2226  loss: 0.0080  decode.loss_ce: 0.0053  decode.acc_seg: 100.0000  aux.loss_ce: 0.0027  aux.acc_seg: 100.0000
+2023/02/14 01:26:42 - mmengine - INFO - Iter(train) [29800/50000]  lr: 2.9942e-03  eta: 0:27:09  time: 0.0804  data_time: 0.0017  memory: 2226  loss: 0.0134  decode.loss_ce: 0.0096  decode.acc_seg: 100.0000  aux.loss_ce: 0.0038  aux.acc_seg: 99.9292
+2023/02/14 01:26:58 - mmengine - INFO - Exp name: pspnet_r50-d8_4xb2-40k_cityscapes-512x1024_20230214_003728
+2023/02/14 01:26:58 - mmengine - INFO - Iter(train) [30000/50000]  lr: 2.9431e-03  eta: 0:26:53  time: 0.0809  data_time: 0.0020  memory: 2226  loss: 0.0053  decode.loss_ce: 0.0030  decode.acc_seg: 100.0000  aux.loss_ce: 0.0023  aux.acc_seg: 99.3523
+2023/02/14 01:26:58 - mmengine - INFO - Saving checkpoint at 30000 iterations
+2023/02/14 01:27:05 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0173  data_time: 0.0011  memory: 695  
+2023/02/14 01:27:08 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0167  data_time: 0.0011  memory: 695  
+2023/02/14 01:27:10 - mmengine - INFO - per class results:
+2023/02/14 01:27:10 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 99.59 | 99.82 |
+| glomeruili | 80.64 | 88.21 |
++------------+-------+-------+
+2023/02/14 01:27:10 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.6000  mIoU: 90.1100  mAcc: 94.0100
+2023/02/14 01:27:26 - mmengine - INFO - Iter(train) [30200/50000]  lr: 2.8919e-03  eta: 0:26:37  time: 0.0806  data_time: 0.0019  memory: 2226  loss: 0.0049  decode.loss_ce: 0.0032  decode.acc_seg: 99.9271  aux.loss_ce: 0.0017  aux.acc_seg: 99.9226
+2023/02/14 01:27:42 - mmengine - INFO - Iter(train) [30400/50000]  lr: 2.8405e-03  eta: 0:26:21  time: 0.0807  data_time: 0.0017  memory: 2226  loss: 0.0079  decode.loss_ce: 0.0043  decode.acc_seg: 99.8714  aux.loss_ce: 0.0036  aux.acc_seg: 99.8787
+2023/02/14 01:27:54 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0170  data_time: 0.0011  memory: 2226  
+2023/02/14 01:27:57 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0167  data_time: 0.0013  memory: 695  
+2023/02/14 01:27:59 - mmengine - INFO - per class results:
+2023/02/14 01:27:59 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 99.55 | 99.75 |
+| glomeruili | 79.33 | 89.53 |
++------------+-------+-------+
+2023/02/14 01:27:59 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.5600  mIoU: 89.4400  mAcc: 94.6400
+2023/02/14 01:28:07 - mmengine - INFO - Iter(train) [30600/50000]  lr: 2.7891e-03  eta: 0:26:05  time: 0.0803  data_time: 0.0017  memory: 2226  loss: 0.0046  decode.loss_ce: 0.0030  decode.acc_seg: 100.0000  aux.loss_ce: 0.0016  aux.acc_seg: 100.0000
+2023/02/14 01:28:23 - mmengine - INFO - Iter(train) [30800/50000]  lr: 2.7375e-03  eta: 0:25:48  time: 0.0806  data_time: 0.0016  memory: 2226  loss: 0.0057  decode.loss_ce: 0.0033  decode.acc_seg: 100.0000  aux.loss_ce: 0.0024  aux.acc_seg: 100.0000
+2023/02/14 01:28:39 - mmengine - INFO - Exp name: pspnet_r50-d8_4xb2-40k_cityscapes-512x1024_20230214_003728
+2023/02/14 01:28:39 - mmengine - INFO - Iter(train) [31000/50000]  lr: 2.6859e-03  eta: 0:25:32  time: 0.0800  data_time: 0.0019  memory: 2226  loss: 0.0041  decode.loss_ce: 0.0027  decode.acc_seg: 100.0000  aux.loss_ce: 0.0014  aux.acc_seg: 100.0000
+2023/02/14 01:28:43 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0170  data_time: 0.0011  memory: 695  
+2023/02/14 01:28:46 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0172  data_time: 0.0010  memory: 695  
+2023/02/14 01:28:48 - mmengine - INFO - per class results:
+2023/02/14 01:28:48 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 99.59 | 99.84 |
+| glomeruili | 80.27 | 86.85 |
++------------+-------+-------+
+2023/02/14 01:28:48 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.5900  mIoU: 89.9300  mAcc: 93.3500
+2023/02/14 01:29:04 - mmengine - INFO - Iter(train) [31200/50000]  lr: 2.6341e-03  eta: 0:25:16  time: 0.0811  data_time: 0.0018  memory: 2226  loss: 0.0194  decode.loss_ce: 0.0133  decode.acc_seg: 100.0000  aux.loss_ce: 0.0060  aux.acc_seg: 100.0000
+2023/02/14 01:29:20 - mmengine - INFO - Iter(train) [31400/50000]  lr: 2.5822e-03  eta: 0:25:00  time: 0.0803  data_time: 0.0018  memory: 2226  loss: 0.0141  decode.loss_ce: 0.0088  decode.acc_seg: 99.9966  aux.loss_ce: 0.0053  aux.acc_seg: 100.0000
+2023/02/14 01:29:32 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0166  data_time: 0.0012  memory: 2226  
+2023/02/14 01:29:35 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0171  data_time: 0.0012  memory: 695  
+2023/02/14 01:29:37 - mmengine - INFO - per class results:
+2023/02/14 01:29:37 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background |  99.6 | 99.86 |
+| glomeruili | 80.87 | 86.74 |
++------------+-------+-------+
+2023/02/14 01:29:37 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.6100  mIoU: 90.2400  mAcc: 93.3000
+2023/02/14 01:29:45 - mmengine - INFO - Iter(train) [31600/50000]  lr: 2.5302e-03  eta: 0:24:44  time: 0.0800  data_time: 0.0018  memory: 2226  loss: 0.0047  decode.loss_ce: 0.0030  decode.acc_seg: 100.0000  aux.loss_ce: 0.0017  aux.acc_seg: 100.0000
+2023/02/14 01:30:01 - mmengine - INFO - Iter(train) [31800/50000]  lr: 2.4781e-03  eta: 0:24:28  time: 0.0808  data_time: 0.0016  memory: 2226  loss: 0.0090  decode.loss_ce: 0.0058  decode.acc_seg: 99.9325  aux.loss_ce: 0.0032  aux.acc_seg: 99.9193
+2023/02/14 01:30:18 - mmengine - INFO - Exp name: pspnet_r50-d8_4xb2-40k_cityscapes-512x1024_20230214_003728
+2023/02/14 01:30:18 - mmengine - INFO - Iter(train) [32000/50000]  lr: 2.4258e-03  eta: 0:24:12  time: 0.0804  data_time: 0.0017  memory: 2226  loss: 0.0089  decode.loss_ce: 0.0062  decode.acc_seg: 100.0000  aux.loss_ce: 0.0028  aux.acc_seg: 100.0000
+2023/02/14 01:30:21 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0166  data_time: 0.0011  memory: 695  
+2023/02/14 01:30:24 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0171  data_time: 0.0011  memory: 695  
+2023/02/14 01:30:26 - mmengine - INFO - per class results:
+2023/02/14 01:30:26 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 99.58 | 99.87 |
+| glomeruili | 79.61 | 84.76 |
++------------+-------+-------+
+2023/02/14 01:30:26 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.5900  mIoU: 89.5900  mAcc: 92.3200
+2023/02/14 01:30:43 - mmengine - INFO - Iter(train) [32200/50000]  lr: 2.3734e-03  eta: 0:23:55  time: 0.0808  data_time: 0.0016  memory: 2226  loss: 0.0093  decode.loss_ce: 0.0063  decode.acc_seg: 100.0000  aux.loss_ce: 0.0030  aux.acc_seg: 100.0000
+2023/02/14 01:30:59 - mmengine - INFO - Iter(train) [32400/50000]  lr: 2.3209e-03  eta: 0:23:39  time: 0.0808  data_time: 0.0017  memory: 2226  loss: 0.0054  decode.loss_ce: 0.0037  decode.acc_seg: 100.0000  aux.loss_ce: 0.0016  aux.acc_seg: 100.0000
+2023/02/14 01:31:10 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0167  data_time: 0.0010  memory: 2226  
+2023/02/14 01:31:14 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0167  data_time: 0.0010  memory: 695  
+2023/02/14 01:31:16 - mmengine - INFO - per class results:
+2023/02/14 01:31:16 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 99.58 | 99.85 |
+| glomeruili | 79.68 | 86.02 |
++------------+-------+-------+
+2023/02/14 01:31:16 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.5800  mIoU: 89.6300  mAcc: 92.9300
+2023/02/14 01:31:24 - mmengine - INFO - Iter(train) [32600/50000]  lr: 2.2682e-03  eta: 0:23:23  time: 0.0806  data_time: 0.0015  memory: 2226  loss: 0.0140  decode.loss_ce: 0.0086  decode.acc_seg: 100.0000  aux.loss_ce: 0.0054  aux.acc_seg: 100.0000
+2023/02/14 01:31:40 - mmengine - INFO - Iter(train) [32800/50000]  lr: 2.2154e-03  eta: 0:23:07  time: 0.0811  data_time: 0.0019  memory: 2226  loss: 0.0100  decode.loss_ce: 0.0065  decode.acc_seg: 98.9328  aux.loss_ce: 0.0036  aux.acc_seg: 99.0786
+2023/02/14 01:31:56 - mmengine - INFO - Exp name: pspnet_r50-d8_4xb2-40k_cityscapes-512x1024_20230214_003728
+2023/02/14 01:31:56 - mmengine - INFO - Iter(train) [33000/50000]  lr: 2.1624e-03  eta: 0:22:51  time: 0.0804  data_time: 0.0019  memory: 2226  loss: 0.0090  decode.loss_ce: 0.0058  decode.acc_seg: 99.6712  aux.loss_ce: 0.0032  aux.acc_seg: 99.5819
+2023/02/14 01:31:59 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0166  data_time: 0.0012  memory: 695  
+2023/02/14 01:32:03 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0174  data_time: 0.0013  memory: 695  
+2023/02/14 01:32:05 - mmengine - INFO - per class results:
+2023/02/14 01:32:05 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 99.59 | 99.79 |
+| glomeruili | 80.76 | 89.48 |
++------------+-------+-------+
+2023/02/14 01:32:05 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.5900  mIoU: 90.1800  mAcc: 94.6400
+2023/02/14 01:32:21 - mmengine - INFO - Iter(train) [33200/50000]  lr: 2.1093e-03  eta: 0:22:35  time: 0.0804  data_time: 0.0020  memory: 2226  loss: 0.0109  decode.loss_ce: 0.0076  decode.acc_seg: 100.0000  aux.loss_ce: 0.0033  aux.acc_seg: 100.0000
+2023/02/14 01:32:37 - mmengine - INFO - Iter(train) [33400/50000]  lr: 2.0561e-03  eta: 0:22:19  time: 0.0798  data_time: 0.0014  memory: 2226  loss: 0.0089  decode.loss_ce: 0.0063  decode.acc_seg: 99.3575  aux.loss_ce: 0.0026  aux.acc_seg: 99.3588
+2023/02/14 01:32:48 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0179  data_time: 0.0013  memory: 2226  
+2023/02/14 01:32:52 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0165  data_time: 0.0010  memory: 695  
+2023/02/14 01:32:54 - mmengine - INFO - per class results:
+2023/02/14 01:32:54 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 99.55 | 99.87 |
+| glomeruili | 78.31 | 83.39 |
++------------+-------+-------+
+2023/02/14 01:32:54 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.5600  mIoU: 88.9300  mAcc: 91.6300
+2023/02/14 01:33:02 - mmengine - INFO - Iter(train) [33600/50000]  lr: 2.0026e-03  eta: 0:22:02  time: 0.0802  data_time: 0.0016  memory: 2226  loss: 0.0105  decode.loss_ce: 0.0062  decode.acc_seg: 100.0000  aux.loss_ce: 0.0043  aux.acc_seg: 100.0000
+2023/02/14 01:33:18 - mmengine - INFO - Iter(train) [33800/50000]  lr: 1.9490e-03  eta: 0:21:46  time: 0.0803  data_time: 0.0018  memory: 2226  loss: 0.0055  decode.loss_ce: 0.0037  decode.acc_seg: 99.8621  aux.loss_ce: 0.0018  aux.acc_seg: 99.8430
+2023/02/14 01:33:34 - mmengine - INFO - Exp name: pspnet_r50-d8_4xb2-40k_cityscapes-512x1024_20230214_003728
+2023/02/14 01:33:34 - mmengine - INFO - Iter(train) [34000/50000]  lr: 1.8953e-03  eta: 0:21:30  time: 0.0808  data_time: 0.0018  memory: 2226  loss: 0.0103  decode.loss_ce: 0.0062  decode.acc_seg: 99.8344  aux.loss_ce: 0.0041  aux.acc_seg: 99.7689
+2023/02/14 01:33:37 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0174  data_time: 0.0012  memory: 695  
+2023/02/14 01:33:41 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0170  data_time: 0.0012  memory: 695  
+2023/02/14 01:33:43 - mmengine - INFO - per class results:
+2023/02/14 01:33:43 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 99.58 | 99.84 |
+| glomeruili |  79.9 | 86.51 |
++------------+-------+-------+
+2023/02/14 01:33:43 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.5900  mIoU: 89.7400  mAcc: 93.1700
+2023/02/14 01:33:59 - mmengine - INFO - Iter(train) [34200/50000]  lr: 1.8413e-03  eta: 0:21:14  time: 0.0805  data_time: 0.0019  memory: 2226  loss: 0.0137  decode.loss_ce: 0.0072  decode.acc_seg: 99.9329  aux.loss_ce: 0.0065  aux.acc_seg: 99.9874
+2023/02/14 01:34:15 - mmengine - INFO - Iter(train) [34400/50000]  lr: 1.7872e-03  eta: 0:20:58  time: 0.0808  data_time: 0.0016  memory: 2226  loss: 0.0166  decode.loss_ce: 0.0116  decode.acc_seg: 99.8936  aux.loss_ce: 0.0050  aux.acc_seg: 99.8936
+2023/02/14 01:34:27 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0167  data_time: 0.0010  memory: 2226  
+2023/02/14 01:34:30 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0167  data_time: 0.0010  memory: 695  
+2023/02/14 01:34:32 - mmengine - INFO - per class results:
+2023/02/14 01:34:32 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 99.58 |  99.8 |
+| glomeruili | 80.37 | 88.68 |
++------------+-------+-------+
+2023/02/14 01:34:32 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.5900  mIoU: 89.9700  mAcc: 94.2400
+2023/02/14 01:34:40 - mmengine - INFO - Iter(train) [34600/50000]  lr: 1.7328e-03  eta: 0:20:42  time: 0.0810  data_time: 0.0016  memory: 2226  loss: 0.0085  decode.loss_ce: 0.0055  decode.acc_seg: 100.0000  aux.loss_ce: 0.0030  aux.acc_seg: 100.0000
+2023/02/14 01:34:56 - mmengine - INFO - Iter(train) [34800/50000]  lr: 1.6783e-03  eta: 0:20:26  time: 0.0805  data_time: 0.0017  memory: 2226  loss: 0.0112  decode.loss_ce: 0.0069  decode.acc_seg: 100.0000  aux.loss_ce: 0.0043  aux.acc_seg: 100.0000
+2023/02/14 01:35:12 - mmengine - INFO - Exp name: pspnet_r50-d8_4xb2-40k_cityscapes-512x1024_20230214_003728
+2023/02/14 01:35:12 - mmengine - INFO - Iter(train) [35000/50000]  lr: 1.6236e-03  eta: 0:20:09  time: 0.0804  data_time: 0.0016  memory: 2226  loss: 0.0049  decode.loss_ce: 0.0031  decode.acc_seg: 99.9355  aux.loss_ce: 0.0018  aux.acc_seg: 99.9427
+2023/02/14 01:35:12 - mmengine - INFO - Saving checkpoint at 35000 iterations
+2023/02/14 01:35:18 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0162  data_time: 0.0010  memory: 695  
+2023/02/14 01:35:22 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0164  data_time: 0.0010  memory: 695  
+2023/02/14 01:35:24 - mmengine - INFO - per class results:
+2023/02/14 01:35:24 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 99.58 | 99.82 |
+| glomeruili | 80.03 | 87.44 |
++------------+-------+-------+
+2023/02/14 01:35:24 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.5900  mIoU: 89.8100  mAcc: 93.6300
+2023/02/14 01:35:40 - mmengine - INFO - Iter(train) [35200/50000]  lr: 1.5686e-03  eta: 0:19:53  time: 0.0804  data_time: 0.0017  memory: 2226  loss: 0.0049  decode.loss_ce: 0.0033  decode.acc_seg: 100.0000  aux.loss_ce: 0.0016  aux.acc_seg: 100.0000
+2023/02/14 01:35:56 - mmengine - INFO - Iter(train) [35400/50000]  lr: 1.5134e-03  eta: 0:19:37  time: 0.0809  data_time: 0.0019  memory: 2226  loss: 0.0036  decode.loss_ce: 0.0023  decode.acc_seg: 99.9709  aux.loss_ce: 0.0013  aux.acc_seg: 99.9512
+2023/02/14 01:36:07 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0172  data_time: 0.0011  memory: 2226  
+2023/02/14 01:36:11 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0165  data_time: 0.0010  memory: 695  
+2023/02/14 01:36:13 - mmengine - INFO - per class results:
+2023/02/14 01:36:13 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 99.54 | 99.86 |
+| glomeruili | 77.96 | 83.76 |
++------------+-------+-------+
+2023/02/14 01:36:13 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.5500  mIoU: 88.7500  mAcc: 91.8100
+2023/02/14 01:36:21 - mmengine - INFO - Iter(train) [35600/50000]  lr: 1.4580e-03  eta: 0:19:21  time: 0.0804  data_time: 0.0020  memory: 2226  loss: 0.0117  decode.loss_ce: 0.0075  decode.acc_seg: 99.4306  aux.loss_ce: 0.0042  aux.acc_seg: 99.4238
+2023/02/14 01:36:37 - mmengine - INFO - Iter(train) [35800/50000]  lr: 1.4023e-03  eta: 0:19:05  time: 0.0804  data_time: 0.0018  memory: 2226  loss: 0.0053  decode.loss_ce: 0.0033  decode.acc_seg: 100.0000  aux.loss_ce: 0.0021  aux.acc_seg: 100.0000
+2023/02/14 01:36:53 - mmengine - INFO - Exp name: pspnet_r50-d8_4xb2-40k_cityscapes-512x1024_20230214_003728
+2023/02/14 01:36:53 - mmengine - INFO - Iter(train) [36000/50000]  lr: 1.3464e-03  eta: 0:18:49  time: 0.0808  data_time: 0.0017  memory: 2226  loss: 0.0050  decode.loss_ce: 0.0030  decode.acc_seg: 99.9380  aux.loss_ce: 0.0021  aux.acc_seg: 99.9294
+2023/02/14 01:36:57 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0169  data_time: 0.0011  memory: 695  
+2023/02/14 01:37:00 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0173  data_time: 0.0013  memory: 695  
+2023/02/14 01:37:02 - mmengine - INFO - per class results:
+2023/02/14 01:37:02 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 99.59 | 99.82 |
+| glomeruili | 80.53 | 88.02 |
++------------+-------+-------+
+2023/02/14 01:37:02 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.6000  mIoU: 90.0600  mAcc: 93.9200
+2023/02/14 01:37:18 - mmengine - INFO - Iter(train) [36200/50000]  lr: 1.2901e-03  eta: 0:18:33  time: 0.0803  data_time: 0.0018  memory: 2226  loss: 0.0086  decode.loss_ce: 0.0053  decode.acc_seg: 99.4091  aux.loss_ce: 0.0033  aux.acc_seg: 99.3323
+2023/02/14 01:37:34 - mmengine - INFO - Iter(train) [36400/50000]  lr: 1.2336e-03  eta: 0:18:16  time: 0.0803  data_time: 0.0018  memory: 2226  loss: 0.0093  decode.loss_ce: 0.0061  decode.acc_seg: 100.0000  aux.loss_ce: 0.0032  aux.acc_seg: 100.0000
+2023/02/14 01:37:46 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0168  data_time: 0.0010  memory: 2226  
+2023/02/14 01:37:49 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0168  data_time: 0.0012  memory: 695  
+2023/02/14 01:37:51 - mmengine - INFO - per class results:
+2023/02/14 01:37:51 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 99.59 |  99.8 |
+| glomeruili | 80.91 | 89.11 |
++------------+-------+-------+
+2023/02/14 01:37:51 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.6000  mIoU: 90.2500  mAcc: 94.4600
+2023/02/14 01:37:59 - mmengine - INFO - Iter(train) [36600/50000]  lr: 1.1768e-03  eta: 0:18:00  time: 0.0808  data_time: 0.0020  memory: 2226  loss: 0.0073  decode.loss_ce: 0.0049  decode.acc_seg: 99.3659  aux.loss_ce: 0.0024  aux.acc_seg: 99.5365
+2023/02/14 01:38:15 - mmengine - INFO - Iter(train) [36800/50000]  lr: 1.1196e-03  eta: 0:17:44  time: 0.0805  data_time: 0.0018  memory: 2226  loss: 0.0049  decode.loss_ce: 0.0031  decode.acc_seg: 100.0000  aux.loss_ce: 0.0018  aux.acc_seg: 100.0000
+2023/02/14 01:38:31 - mmengine - INFO - Exp name: pspnet_r50-d8_4xb2-40k_cityscapes-512x1024_20230214_003728
+2023/02/14 01:38:31 - mmengine - INFO - Iter(train) [37000/50000]  lr: 1.0621e-03  eta: 0:17:28  time: 0.0806  data_time: 0.0017  memory: 2226  loss: 0.0036  decode.loss_ce: 0.0023  decode.acc_seg: 100.0000  aux.loss_ce: 0.0013  aux.acc_seg: 100.0000
+2023/02/14 01:38:35 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0171  data_time: 0.0012  memory: 695  
+2023/02/14 01:38:38 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0169  data_time: 0.0010  memory: 695  
+2023/02/14 01:38:40 - mmengine - INFO - per class results:
+2023/02/14 01:38:40 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 99.58 | 99.83 |
+| glomeruili | 80.02 | 87.14 |
++------------+-------+-------+
+2023/02/14 01:38:40 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.5900  mIoU: 89.8000  mAcc: 93.4800
+2023/02/14 01:38:56 - mmengine - INFO - Iter(train) [37200/50000]  lr: 1.0041e-03  eta: 0:17:12  time: 0.0804  data_time: 0.0017  memory: 2226  loss: 0.0090  decode.loss_ce: 0.0057  decode.acc_seg: 99.8268  aux.loss_ce: 0.0033  aux.acc_seg: 99.8371
+2023/02/14 01:39:12 - mmengine - INFO - Iter(train) [37400/50000]  lr: 9.4580e-04  eta: 0:16:56  time: 0.0805  data_time: 0.0016  memory: 2226  loss: 0.0058  decode.loss_ce: 0.0038  decode.acc_seg: 100.0000  aux.loss_ce: 0.0020  aux.acc_seg: 100.0000
+2023/02/14 01:39:24 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0169  data_time: 0.0011  memory: 2226  
+2023/02/14 01:39:27 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0168  data_time: 0.0010  memory: 695  
+2023/02/14 01:39:29 - mmengine - INFO - per class results:
+2023/02/14 01:39:29 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 99.58 | 99.82 |
+| glomeruili | 79.92 | 87.41 |
++------------+-------+-------+
+2023/02/14 01:39:29 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.5800  mIoU: 89.7500  mAcc: 93.6200
+2023/02/14 01:39:37 - mmengine - INFO - Iter(train) [37600/50000]  lr: 8.8701e-04  eta: 0:16:40  time: 0.0804  data_time: 0.0016  memory: 2226  loss: 0.0102  decode.loss_ce: 0.0069  decode.acc_seg: 100.0000  aux.loss_ce: 0.0034  aux.acc_seg: 100.0000
+2023/02/14 01:39:53 - mmengine - INFO - Iter(train) [37800/50000]  lr: 8.2773e-04  eta: 0:16:24  time: 0.0809  data_time: 0.0019  memory: 2226  loss: 0.0130  decode.loss_ce: 0.0074  decode.acc_seg: 98.9532  aux.loss_ce: 0.0056  aux.acc_seg: 96.8582
+2023/02/14 01:40:10 - mmengine - INFO - Exp name: pspnet_r50-d8_4xb2-40k_cityscapes-512x1024_20230214_003728
+2023/02/14 01:40:10 - mmengine - INFO - Iter(train) [38000/50000]  lr: 7.6791e-04  eta: 0:16:07  time: 0.0806  data_time: 0.0019  memory: 2226  loss: 0.0106  decode.loss_ce: 0.0074  decode.acc_seg: 100.0000  aux.loss_ce: 0.0032  aux.acc_seg: 100.0000
+2023/02/14 01:40:13 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0170  data_time: 0.0012  memory: 695  
+2023/02/14 01:40:16 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0171  data_time: 0.0013  memory: 695  
+2023/02/14 01:40:18 - mmengine - INFO - per class results:
+2023/02/14 01:40:18 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 99.58 | 99.84 |
+| glomeruili | 79.88 | 86.44 |
++------------+-------+-------+
+2023/02/14 01:40:18 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.5900  mIoU: 89.7300  mAcc: 93.1400
+2023/02/14 01:40:35 - mmengine - INFO - Iter(train) [38200/50000]  lr: 7.0749e-04  eta: 0:15:51  time: 0.0807  data_time: 0.0015  memory: 2226  loss: 0.0107  decode.loss_ce: 0.0072  decode.acc_seg: 100.0000  aux.loss_ce: 0.0035  aux.acc_seg: 100.0000
+2023/02/14 01:40:51 - mmengine - INFO - Iter(train) [38400/50000]  lr: 6.4639e-04  eta: 0:15:35  time: 0.0806  data_time: 0.0017  memory: 2226  loss: 0.0050  decode.loss_ce: 0.0035  decode.acc_seg: 99.9458  aux.loss_ce: 0.0016  aux.acc_seg: 99.9626
+2023/02/14 01:41:02 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0169  data_time: 0.0010  memory: 2226  
+2023/02/14 01:41:06 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0172  data_time: 0.0012  memory: 695  
+2023/02/14 01:41:08 - mmengine - INFO - per class results:
+2023/02/14 01:41:08 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 99.59 | 99.82 |
+| glomeruili | 80.81 | 88.32 |
++------------+-------+-------+
+2023/02/14 01:41:08 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.6000  mIoU: 90.2000  mAcc: 94.0700
+2023/02/14 01:41:16 - mmengine - INFO - Iter(train) [38600/50000]  lr: 5.8451e-04  eta: 0:15:19  time: 0.0801  data_time: 0.0013  memory: 2226  loss: 0.0072  decode.loss_ce: 0.0049  decode.acc_seg: 100.0000  aux.loss_ce: 0.0024  aux.acc_seg: 100.0000
+2023/02/14 01:41:32 - mmengine - INFO - Iter(train) [38800/50000]  lr: 5.2175e-04  eta: 0:15:03  time: 0.0807  data_time: 0.0017  memory: 2226  loss: 0.0070  decode.loss_ce: 0.0045  decode.acc_seg: 99.8631  aux.loss_ce: 0.0025  aux.acc_seg: 99.8613
+2023/02/14 01:41:48 - mmengine - INFO - Exp name: pspnet_r50-d8_4xb2-40k_cityscapes-512x1024_20230214_003728
+2023/02/14 01:41:48 - mmengine - INFO - Iter(train) [39000/50000]  lr: 4.5792e-04  eta: 0:14:47  time: 0.0809  data_time: 0.0021  memory: 2226  loss: 0.0082  decode.loss_ce: 0.0056  decode.acc_seg: 99.6879  aux.loss_ce: 0.0026  aux.acc_seg: 99.6492
+2023/02/14 01:41:51 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0172  data_time: 0.0011  memory: 695  
+2023/02/14 01:41:55 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0167  data_time: 0.0012  memory: 695  
+2023/02/14 01:41:57 - mmengine - INFO - per class results:
+2023/02/14 01:41:57 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background |  99.6 | 99.79 |
+| glomeruili | 81.37 | 90.26 |
++------------+-------+-------+
+2023/02/14 01:41:57 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.6100  mIoU: 90.4800  mAcc: 95.0300
+2023/02/14 01:42:13 - mmengine - INFO - Iter(train) [39200/50000]  lr: 3.9280e-04  eta: 0:14:31  time: 0.0806  data_time: 0.0021  memory: 2226  loss: 0.0035  decode.loss_ce: 0.0022  decode.acc_seg: 99.7246  aux.loss_ce: 0.0013  aux.acc_seg: 99.7840
+2023/02/14 01:42:29 - mmengine - INFO - Iter(train) [39400/50000]  lr: 3.2601e-04  eta: 0:14:14  time: 0.0810  data_time: 0.0017  memory: 2226  loss: 0.0069  decode.loss_ce: 0.0042  decode.acc_seg: 100.0000  aux.loss_ce: 0.0027  aux.acc_seg: 100.0000
+2023/02/14 01:42:41 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0167  data_time: 0.0010  memory: 2226  
+2023/02/14 01:42:44 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0171  data_time: 0.0011  memory: 695  
+2023/02/14 01:42:46 - mmengine - INFO - per class results:
+2023/02/14 01:42:46 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 99.59 |  99.8 |
+| glomeruili | 80.63 | 89.09 |
++------------+-------+-------+
+2023/02/14 01:42:46 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.5900  mIoU: 90.1100  mAcc: 94.4400
+2023/02/14 01:42:54 - mmengine - INFO - Iter(train) [39600/50000]  lr: 2.5691e-04  eta: 0:13:58  time: 0.0803  data_time: 0.0017  memory: 2226  loss: 0.0144  decode.loss_ce: 0.0091  decode.acc_seg: 100.0000  aux.loss_ce: 0.0053  aux.acc_seg: 100.0000
+2023/02/14 01:43:10 - mmengine - INFO - Iter(train) [39800/50000]  lr: 1.8408e-04  eta: 0:13:42  time: 0.0804  data_time: 0.0017  memory: 2226  loss: 0.0059  decode.loss_ce: 0.0039  decode.acc_seg: 99.9097  aux.loss_ce: 0.0021  aux.acc_seg: 99.9352
+2023/02/14 01:43:26 - mmengine - INFO - Exp name: pspnet_r50-d8_4xb2-40k_cityscapes-512x1024_20230214_003728
+2023/02/14 01:43:26 - mmengine - INFO - Iter(train) [40000/50000]  lr: 1.0000e-04  eta: 0:13:26  time: 0.0807  data_time: 0.0018  memory: 2226  loss: 0.0063  decode.loss_ce: 0.0042  decode.acc_seg: 99.7695  aux.loss_ce: 0.0020  aux.acc_seg: 99.6580
+2023/02/14 01:43:26 - mmengine - INFO - Saving checkpoint at 40000 iterations
+2023/02/14 01:43:32 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0174  data_time: 0.0014  memory: 695  
+2023/02/14 01:43:36 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0171  data_time: 0.0011  memory: 695  
+2023/02/14 01:43:38 - mmengine - INFO - per class results:
+2023/02/14 01:43:38 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 99.59 | 99.83 |
+| glomeruili | 80.47 | 87.72 |
++------------+-------+-------+
+2023/02/14 01:43:38 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.6000  mIoU: 90.0300  mAcc: 93.7700
+2023/02/14 01:43:54 - mmengine - INFO - Iter(train) [40200/50000]  lr: 1.0000e-04  eta: 0:13:10  time: 0.0810  data_time: 0.0015  memory: 2226  loss: 0.0071  decode.loss_ce: 0.0045  decode.acc_seg: 100.0000  aux.loss_ce: 0.0025  aux.acc_seg: 100.0000
+2023/02/14 01:44:10 - mmengine - INFO - Iter(train) [40400/50000]  lr: 1.0000e-04  eta: 0:12:54  time: 0.0806  data_time: 0.0014  memory: 2226  loss: 0.0025  decode.loss_ce: 0.0015  decode.acc_seg: 99.9167  aux.loss_ce: 0.0009  aux.acc_seg: 99.9382
+2023/02/14 01:44:21 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0169  data_time: 0.0011  memory: 2226  
+2023/02/14 01:44:25 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0172  data_time: 0.0011  memory: 695  
+2023/02/14 01:44:27 - mmengine - INFO - per class results:
+2023/02/14 01:44:27 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background |  99.6 | 99.82 |
+| glomeruili | 81.05 | 88.69 |
++------------+-------+-------+
+2023/02/14 01:44:27 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.6100  mIoU: 90.3200  mAcc: 94.2500
+2023/02/14 01:44:35 - mmengine - INFO - Iter(train) [40600/50000]  lr: 1.0000e-04  eta: 0:12:38  time: 0.0804  data_time: 0.0015  memory: 2226  loss: 0.0032  decode.loss_ce: 0.0021  decode.acc_seg: 99.8295  aux.loss_ce: 0.0011  aux.acc_seg: 99.8241
+2023/02/14 01:44:51 - mmengine - INFO - Iter(train) [40800/50000]  lr: 1.0000e-04  eta: 0:12:22  time: 0.0810  data_time: 0.0019  memory: 2226  loss: 0.0036  decode.loss_ce: 0.0022  decode.acc_seg: 99.2820  aux.loss_ce: 0.0014  aux.acc_seg: 99.1630
+2023/02/14 01:45:07 - mmengine - INFO - Exp name: pspnet_r50-d8_4xb2-40k_cityscapes-512x1024_20230214_003728
+2023/02/14 01:45:07 - mmengine - INFO - Iter(train) [41000/50000]  lr: 1.0000e-04  eta: 0:12:05  time: 0.0805  data_time: 0.0018  memory: 2226  loss: 0.0041  decode.loss_ce: 0.0027  decode.acc_seg: 99.9203  aux.loss_ce: 0.0015  aux.acc_seg: 99.9052
+2023/02/14 01:45:11 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0169  data_time: 0.0012  memory: 695  
+2023/02/14 01:45:14 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0174  data_time: 0.0011  memory: 695  
+2023/02/14 01:45:16 - mmengine - INFO - per class results:
+2023/02/14 01:45:16 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background |  99.6 | 99.81 |
+| glomeruili | 81.33 | 89.11 |
++------------+-------+-------+
+2023/02/14 01:45:16 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.6100  mIoU: 90.4700  mAcc: 94.4600
+2023/02/14 01:45:32 - mmengine - INFO - Iter(train) [41200/50000]  lr: 1.0000e-04  eta: 0:11:49  time: 0.0805  data_time: 0.0017  memory: 2226  loss: 0.0047  decode.loss_ce: 0.0025  decode.acc_seg: 100.0000  aux.loss_ce: 0.0022  aux.acc_seg: 100.0000
+2023/02/14 01:45:48 - mmengine - INFO - Iter(train) [41400/50000]  lr: 1.0000e-04  eta: 0:11:33  time: 0.0806  data_time: 0.0019  memory: 2226  loss: 0.0107  decode.loss_ce: 0.0066  decode.acc_seg: 100.0000  aux.loss_ce: 0.0041  aux.acc_seg: 100.0000
+2023/02/14 01:46:00 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0175  data_time: 0.0011  memory: 2226  
+2023/02/14 01:46:03 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0162  data_time: 0.0010  memory: 695  
+2023/02/14 01:46:05 - mmengine - INFO - per class results:
+2023/02/14 01:46:05 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background |  99.6 |  99.8 |
+| glomeruili | 81.44 | 89.71 |
++------------+-------+-------+
+2023/02/14 01:46:05 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.6100  mIoU: 90.5200  mAcc: 94.7600
+2023/02/14 01:46:13 - mmengine - INFO - Iter(train) [41600/50000]  lr: 1.0000e-04  eta: 0:11:17  time: 0.0805  data_time: 0.0018  memory: 2226  loss: 0.0120  decode.loss_ce: 0.0076  decode.acc_seg: 100.0000  aux.loss_ce: 0.0044  aux.acc_seg: 100.0000
+2023/02/14 01:46:29 - mmengine - INFO - Iter(train) [41800/50000]  lr: 1.0000e-04  eta: 0:11:01  time: 0.0808  data_time: 0.0017  memory: 2226  loss: 0.0041  decode.loss_ce: 0.0026  decode.acc_seg: 99.9929  aux.loss_ce: 0.0015  aux.acc_seg: 99.9929
+2023/02/14 01:46:45 - mmengine - INFO - Exp name: pspnet_r50-d8_4xb2-40k_cityscapes-512x1024_20230214_003728
+2023/02/14 01:46:45 - mmengine - INFO - Iter(train) [42000/50000]  lr: 1.0000e-04  eta: 0:10:45  time: 0.0802  data_time: 0.0018  memory: 2226  loss: 0.0064  decode.loss_ce: 0.0044  decode.acc_seg: 99.9766  aux.loss_ce: 0.0021  aux.acc_seg: 99.9766
+2023/02/14 01:46:49 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0173  data_time: 0.0011  memory: 695  
+2023/02/14 01:46:52 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0166  data_time: 0.0010  memory: 695  
+2023/02/14 01:46:54 - mmengine - INFO - per class results:
+2023/02/14 01:46:54 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background |  99.6 | 99.82 |
+| glomeruili | 81.24 | 88.92 |
++------------+-------+-------+
+2023/02/14 01:46:54 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.6100  mIoU: 90.4200  mAcc: 94.3700
+2023/02/14 01:47:10 - mmengine - INFO - Iter(train) [42200/50000]  lr: 1.0000e-04  eta: 0:10:29  time: 0.0804  data_time: 0.0019  memory: 2226  loss: 0.0043  decode.loss_ce: 0.0028  decode.acc_seg: 99.7101  aux.loss_ce: 0.0015  aux.acc_seg: 99.7895
+2023/02/14 01:47:27 - mmengine - INFO - Iter(train) [42400/50000]  lr: 1.0000e-04  eta: 0:10:12  time: 0.0807  data_time: 0.0018  memory: 2226  loss: 0.0076  decode.loss_ce: 0.0048  decode.acc_seg: 99.8535  aux.loss_ce: 0.0027  aux.acc_seg: 99.8482
+2023/02/14 01:47:38 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0169  data_time: 0.0011  memory: 2226  
+2023/02/14 01:47:41 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0168  data_time: 0.0011  memory: 695  
+2023/02/14 01:47:43 - mmengine - INFO - per class results:
+2023/02/14 01:47:43 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background |  99.6 | 99.82 |
+| glomeruili | 80.86 | 88.52 |
++------------+-------+-------+
+2023/02/14 01:47:43 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.6000  mIoU: 90.2300  mAcc: 94.1700
+2023/02/14 01:47:51 - mmengine - INFO - Iter(train) [42600/50000]  lr: 1.0000e-04  eta: 0:09:56  time: 0.0802  data_time: 0.0017  memory: 2226  loss: 0.0029  decode.loss_ce: 0.0017  decode.acc_seg: 100.0000  aux.loss_ce: 0.0012  aux.acc_seg: 100.0000
+2023/02/14 01:48:08 - mmengine - INFO - Iter(train) [42800/50000]  lr: 1.0000e-04  eta: 0:09:40  time: 0.0807  data_time: 0.0018  memory: 2226  loss: 0.0057  decode.loss_ce: 0.0036  decode.acc_seg: 99.9606  aux.loss_ce: 0.0022  aux.acc_seg: 99.9606
+2023/02/14 01:48:24 - mmengine - INFO - Exp name: pspnet_r50-d8_4xb2-40k_cityscapes-512x1024_20230214_003728
+2023/02/14 01:48:24 - mmengine - INFO - Iter(train) [43000/50000]  lr: 1.0000e-04  eta: 0:09:24  time: 0.0805  data_time: 0.0016  memory: 2226  loss: 0.0044  decode.loss_ce: 0.0029  decode.acc_seg: 99.9094  aux.loss_ce: 0.0015  aux.acc_seg: 99.9017
+2023/02/14 01:48:27 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0170  data_time: 0.0010  memory: 695  
+2023/02/14 01:48:31 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0167  data_time: 0.0012  memory: 695  
+2023/02/14 01:48:33 - mmengine - INFO - per class results:
+2023/02/14 01:48:33 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 99.59 | 99.81 |
+| glomeruili | 80.74 | 88.84 |
++------------+-------+-------+
+2023/02/14 01:48:33 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.6000  mIoU: 90.1700  mAcc: 94.3200
+2023/02/14 01:48:49 - mmengine - INFO - Iter(train) [43200/50000]  lr: 1.0000e-04  eta: 0:09:08  time: 0.0804  data_time: 0.0019  memory: 2226  loss: 0.0096  decode.loss_ce: 0.0064  decode.acc_seg: 99.7796  aux.loss_ce: 0.0033  aux.acc_seg: 99.6149
+2023/02/14 01:49:05 - mmengine - INFO - Iter(train) [43400/50000]  lr: 1.0000e-04  eta: 0:08:52  time: 0.0804  data_time: 0.0016  memory: 2226  loss: 0.0084  decode.loss_ce: 0.0052  decode.acc_seg: 99.7752  aux.loss_ce: 0.0032  aux.acc_seg: 99.7352
+2023/02/14 01:49:16 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0172  data_time: 0.0011  memory: 2226  
+2023/02/14 01:49:20 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0171  data_time: 0.0010  memory: 695  
+2023/02/14 01:49:22 - mmengine - INFO - per class results:
+2023/02/14 01:49:22 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 99.59 |  99.8 |
+| glomeruili |  80.6 | 88.76 |
++------------+-------+-------+
+2023/02/14 01:49:22 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.5900  mIoU: 90.1000  mAcc: 94.2800
+2023/02/14 01:49:30 - mmengine - INFO - Iter(train) [43600/50000]  lr: 1.0000e-04  eta: 0:08:36  time: 0.0806  data_time: 0.0017  memory: 2226  loss: 0.0052  decode.loss_ce: 0.0032  decode.acc_seg: 99.9165  aux.loss_ce: 0.0020  aux.acc_seg: 99.9435
+2023/02/14 01:49:46 - mmengine - INFO - Iter(train) [43800/50000]  lr: 1.0000e-04  eta: 0:08:20  time: 0.0807  data_time: 0.0018  memory: 2226  loss: 0.0057  decode.loss_ce: 0.0038  decode.acc_seg: 100.0000  aux.loss_ce: 0.0019  aux.acc_seg: 100.0000
+2023/02/14 01:50:02 - mmengine - INFO - Exp name: pspnet_r50-d8_4xb2-40k_cityscapes-512x1024_20230214_003728
+2023/02/14 01:50:02 - mmengine - INFO - Iter(train) [44000/50000]  lr: 1.0000e-04  eta: 0:08:03  time: 0.0809  data_time: 0.0022  memory: 2226  loss: 0.0050  decode.loss_ce: 0.0031  decode.acc_seg: 100.0000  aux.loss_ce: 0.0020  aux.acc_seg: 100.0000
+2023/02/14 01:50:05 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0170  data_time: 0.0011  memory: 695  
+2023/02/14 01:50:09 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0166  data_time: 0.0011  memory: 695  
+2023/02/14 01:50:11 - mmengine - INFO - per class results:
+2023/02/14 01:50:11 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 99.58 | 99.81 |
+| glomeruili | 80.08 | 87.99 |
++------------+-------+-------+
+2023/02/14 01:50:11 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.5800  mIoU: 89.8300  mAcc: 93.9000
+2023/02/14 01:50:27 - mmengine - INFO - Iter(train) [44200/50000]  lr: 1.0000e-04  eta: 0:07:47  time: 0.0801  data_time: 0.0020  memory: 2226  loss: 0.0036  decode.loss_ce: 0.0023  decode.acc_seg: 99.5871  aux.loss_ce: 0.0013  aux.acc_seg: 99.5871
+2023/02/14 01:50:43 - mmengine - INFO - Iter(train) [44400/50000]  lr: 1.0000e-04  eta: 0:07:31  time: 0.0806  data_time: 0.0017  memory: 2226  loss: 0.0061  decode.loss_ce: 0.0040  decode.acc_seg: 99.8844  aux.loss_ce: 0.0021  aux.acc_seg: 99.8676
+2023/02/14 01:50:55 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0166  data_time: 0.0011  memory: 2226  
+2023/02/14 01:50:58 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0172  data_time: 0.0012  memory: 695  
+2023/02/14 01:51:00 - mmengine - INFO - per class results:
+2023/02/14 01:51:00 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 99.59 |  99.8 |
+| glomeruili | 80.68 | 89.08 |
++------------+-------+-------+
+2023/02/14 01:51:00 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.5900  mIoU: 90.1300  mAcc: 94.4400
+2023/02/14 01:51:08 - mmengine - INFO - Iter(train) [44600/50000]  lr: 1.0000e-04  eta: 0:07:15  time: 0.0806  data_time: 0.0019  memory: 2226  loss: 0.0084  decode.loss_ce: 0.0056  decode.acc_seg: 99.7184  aux.loss_ce: 0.0028  aux.acc_seg: 99.7051
+2023/02/14 01:51:24 - mmengine - INFO - Iter(train) [44800/50000]  lr: 1.0000e-04  eta: 0:06:59  time: 0.0805  data_time: 0.0019  memory: 2226  loss: 0.0035  decode.loss_ce: 0.0023  decode.acc_seg: 100.0000  aux.loss_ce: 0.0012  aux.acc_seg: 100.0000
+2023/02/14 01:51:40 - mmengine - INFO - Exp name: pspnet_r50-d8_4xb2-40k_cityscapes-512x1024_20230214_003728
+2023/02/14 01:51:40 - mmengine - INFO - Iter(train) [45000/50000]  lr: 1.0000e-04  eta: 0:06:43  time: 0.0804  data_time: 0.0018  memory: 2226  loss: 0.0083  decode.loss_ce: 0.0057  decode.acc_seg: 99.7261  aux.loss_ce: 0.0026  aux.acc_seg: 99.4359
+2023/02/14 01:51:40 - mmengine - INFO - Saving checkpoint at 45000 iterations
+2023/02/14 01:51:47 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0170  data_time: 0.0011  memory: 695  
+2023/02/14 01:51:50 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0168  data_time: 0.0010  memory: 695  
+2023/02/14 01:51:52 - mmengine - INFO - per class results:
+2023/02/14 01:51:52 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 99.61 | 99.83 |
+| glomeruili | 81.38 | 88.52 |
++------------+-------+-------+
+2023/02/14 01:51:52 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.6200  mIoU: 90.5000  mAcc: 94.1700
+2023/02/14 01:52:08 - mmengine - INFO - Iter(train) [45200/50000]  lr: 1.0000e-04  eta: 0:06:27  time: 0.0808  data_time: 0.0016  memory: 2226  loss: 0.0050  decode.loss_ce: 0.0032  decode.acc_seg: 99.7635  aux.loss_ce: 0.0019  aux.acc_seg: 99.7819
+2023/02/14 01:52:24 - mmengine - INFO - Iter(train) [45400/50000]  lr: 1.0000e-04  eta: 0:06:11  time: 0.0798  data_time: 0.0017  memory: 2226  loss: 0.0052  decode.loss_ce: 0.0034  decode.acc_seg: 100.0000  aux.loss_ce: 0.0018  aux.acc_seg: 100.0000
+2023/02/14 01:52:36 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0174  data_time: 0.0010  memory: 2226  
+2023/02/14 01:52:39 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0173  data_time: 0.0012  memory: 695  
+2023/02/14 01:52:41 - mmengine - INFO - per class results:
+2023/02/14 01:52:41 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 99.59 | 99.81 |
+| glomeruili | 80.63 | 88.37 |
++------------+-------+-------+
+2023/02/14 01:52:41 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.6000  mIoU: 90.1100  mAcc: 94.0900
+2023/02/14 01:52:49 - mmengine - INFO - Iter(train) [45600/50000]  lr: 1.0000e-04  eta: 0:05:54  time: 0.0810  data_time: 0.0021  memory: 2226  loss: 0.0098  decode.loss_ce: 0.0064  decode.acc_seg: 99.0337  aux.loss_ce: 0.0034  aux.acc_seg: 98.9942
+2023/02/14 01:53:05 - mmengine - INFO - Iter(train) [45800/50000]  lr: 1.0000e-04  eta: 0:05:38  time: 0.0799  data_time: 0.0012  memory: 2226  loss: 0.0023  decode.loss_ce: 0.0014  decode.acc_seg: 100.0000  aux.loss_ce: 0.0008  aux.acc_seg: 100.0000
+2023/02/14 01:53:21 - mmengine - INFO - Exp name: pspnet_r50-d8_4xb2-40k_cityscapes-512x1024_20230214_003728
+2023/02/14 01:53:21 - mmengine - INFO - Iter(train) [46000/50000]  lr: 1.0000e-04  eta: 0:05:22  time: 0.0807  data_time: 0.0019  memory: 2226  loss: 0.0066  decode.loss_ce: 0.0044  decode.acc_seg: 100.0000  aux.loss_ce: 0.0022  aux.acc_seg: 100.0000
+2023/02/14 01:53:25 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0170  data_time: 0.0010  memory: 695  
+2023/02/14 01:53:28 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0164  data_time: 0.0009  memory: 695  
+2023/02/14 01:53:30 - mmengine - INFO - per class results:
+2023/02/14 01:53:30 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 99.58 | 99.82 |
+| glomeruili | 80.15 | 87.53 |
++------------+-------+-------+
+2023/02/14 01:53:30 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.5900  mIoU: 89.8600  mAcc: 93.6800
+2023/02/14 01:53:46 - mmengine - INFO - Iter(train) [46200/50000]  lr: 1.0000e-04  eta: 0:05:06  time: 0.0810  data_time: 0.0017  memory: 2226  loss: 0.0036  decode.loss_ce: 0.0021  decode.acc_seg: 100.0000  aux.loss_ce: 0.0015  aux.acc_seg: 100.0000
+2023/02/14 01:54:02 - mmengine - INFO - Iter(train) [46400/50000]  lr: 1.0000e-04  eta: 0:04:50  time: 0.0806  data_time: 0.0019  memory: 2226  loss: 0.0031  decode.loss_ce: 0.0020  decode.acc_seg: 99.9644  aux.loss_ce: 0.0012  aux.acc_seg: 99.9116
+2023/02/14 01:54:14 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0169  data_time: 0.0011  memory: 2226  
+2023/02/14 01:54:17 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0167  data_time: 0.0011  memory: 695  
+2023/02/14 01:54:19 - mmengine - INFO - per class results:
+2023/02/14 01:54:19 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background |  99.6 | 99.81 |
+| glomeruili | 81.39 | 89.54 |
++------------+-------+-------+
+2023/02/14 01:54:19 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.6100  mIoU: 90.4900  mAcc: 94.6700
+2023/02/14 01:54:27 - mmengine - INFO - Iter(train) [46600/50000]  lr: 1.0000e-04  eta: 0:04:34  time: 0.0808  data_time: 0.0016  memory: 2226  loss: 0.0039  decode.loss_ce: 0.0024  decode.acc_seg: 99.9286  aux.loss_ce: 0.0015  aux.acc_seg: 99.9294
+2023/02/14 01:54:44 - mmengine - INFO - Iter(train) [46800/50000]  lr: 1.0000e-04  eta: 0:04:18  time: 0.0810  data_time: 0.0018  memory: 2226  loss: 0.0033  decode.loss_ce: 0.0020  decode.acc_seg: 99.7088  aux.loss_ce: 0.0013  aux.acc_seg: 99.7375
+2023/02/14 01:55:00 - mmengine - INFO - Exp name: pspnet_r50-d8_4xb2-40k_cityscapes-512x1024_20230214_003728
+2023/02/14 01:55:00 - mmengine - INFO - Iter(train) [47000/50000]  lr: 1.0000e-04  eta: 0:04:01  time: 0.0803  data_time: 0.0017  memory: 2226  loss: 0.0052  decode.loss_ce: 0.0031  decode.acc_seg: 99.6215  aux.loss_ce: 0.0021  aux.acc_seg: 99.5646
+2023/02/14 01:55:03 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0168  data_time: 0.0010  memory: 695  
+2023/02/14 01:55:07 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0170  data_time: 0.0011  memory: 695  
+2023/02/14 01:55:08 - mmengine - INFO - per class results:
+2023/02/14 01:55:08 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background |  99.6 |  99.8 |
+| glomeruili | 81.35 | 89.67 |
++------------+-------+-------+
+2023/02/14 01:55:08 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.6100  mIoU: 90.4800  mAcc: 94.7400
+2023/02/14 01:55:25 - mmengine - INFO - Iter(train) [47200/50000]  lr: 1.0000e-04  eta: 0:03:45  time: 0.0807  data_time: 0.0018  memory: 2226  loss: 0.0060  decode.loss_ce: 0.0040  decode.acc_seg: 100.0000  aux.loss_ce: 0.0020  aux.acc_seg: 100.0000
+2023/02/14 01:55:41 - mmengine - INFO - Iter(train) [47400/50000]  lr: 1.0000e-04  eta: 0:03:29  time: 0.0804  data_time: 0.0015  memory: 2226  loss: 0.0107  decode.loss_ce: 0.0068  decode.acc_seg: 99.3397  aux.loss_ce: 0.0039  aux.acc_seg: 99.2237
+2023/02/14 01:55:52 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0172  data_time: 0.0011  memory: 2226  
+2023/02/14 01:55:56 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0168  data_time: 0.0011  memory: 695  
+2023/02/14 01:55:58 - mmengine - INFO - per class results:
+2023/02/14 01:55:58 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background |  99.6 | 99.82 |
+| glomeruili | 80.92 | 88.28 |
++------------+-------+-------+
+2023/02/14 01:55:58 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.6000  mIoU: 90.2600  mAcc: 94.0500
+2023/02/14 01:56:06 - mmengine - INFO - Iter(train) [47600/50000]  lr: 1.0000e-04  eta: 0:03:13  time: 0.0803  data_time: 0.0017  memory: 2226  loss: 0.0063  decode.loss_ce: 0.0039  decode.acc_seg: 99.9524  aux.loss_ce: 0.0024  aux.acc_seg: 99.8568
+2023/02/14 01:56:22 - mmengine - INFO - Iter(train) [47800/50000]  lr: 1.0000e-04  eta: 0:02:57  time: 0.0806  data_time: 0.0018  memory: 2226  loss: 0.0137  decode.loss_ce: 0.0069  decode.acc_seg: 100.0000  aux.loss_ce: 0.0068  aux.acc_seg: 100.0000
+2023/02/14 01:56:38 - mmengine - INFO - Exp name: pspnet_r50-d8_4xb2-40k_cityscapes-512x1024_20230214_003728
+2023/02/14 01:56:38 - mmengine - INFO - Iter(train) [48000/50000]  lr: 1.0000e-04  eta: 0:02:41  time: 0.0807  data_time: 0.0019  memory: 2226  loss: 0.0073  decode.loss_ce: 0.0047  decode.acc_seg: 99.7236  aux.loss_ce: 0.0026  aux.acc_seg: 99.6786
+2023/02/14 01:56:41 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0178  data_time: 0.0011  memory: 695  
+2023/02/14 01:56:45 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0177  data_time: 0.0011  memory: 695  
+2023/02/14 01:56:47 - mmengine - INFO - per class results:
+2023/02/14 01:56:47 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background |  99.6 | 99.81 |
+| glomeruili | 81.32 | 89.33 |
++------------+-------+-------+
+2023/02/14 01:56:47 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.6100  mIoU: 90.4600  mAcc: 94.5700
+2023/02/14 01:57:03 - mmengine - INFO - Iter(train) [48200/50000]  lr: 1.0000e-04  eta: 0:02:25  time: 0.0803  data_time: 0.0016  memory: 2226  loss: 0.0027  decode.loss_ce: 0.0016  decode.acc_seg: 100.0000  aux.loss_ce: 0.0010  aux.acc_seg: 100.0000
+2023/02/14 01:57:19 - mmengine - INFO - Iter(train) [48400/50000]  lr: 1.0000e-04  eta: 0:02:09  time: 0.0808  data_time: 0.0016  memory: 2226  loss: 0.0141  decode.loss_ce: 0.0084  decode.acc_seg: 100.0000  aux.loss_ce: 0.0057  aux.acc_seg: 100.0000
+2023/02/14 01:57:31 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0172  data_time: 0.0011  memory: 2226  
+2023/02/14 01:57:34 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0169  data_time: 0.0011  memory: 695  
+2023/02/14 01:57:36 - mmengine - INFO - per class results:
+2023/02/14 01:57:36 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 99.61 | 99.82 |
+| glomeruili | 81.39 | 89.09 |
++------------+-------+-------+
+2023/02/14 01:57:36 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.6100  mIoU: 90.5000  mAcc: 94.4500
+2023/02/14 01:57:44 - mmengine - INFO - Iter(train) [48600/50000]  lr: 1.0000e-04  eta: 0:01:52  time: 0.0808  data_time: 0.0020  memory: 2226  loss: 0.0112  decode.loss_ce: 0.0070  decode.acc_seg: 99.5107  aux.loss_ce: 0.0042  aux.acc_seg: 99.5107
+2023/02/14 01:58:00 - mmengine - INFO - Iter(train) [48800/50000]  lr: 1.0000e-04  eta: 0:01:36  time: 0.0807  data_time: 0.0017  memory: 2226  loss: 0.0040  decode.loss_ce: 0.0026  decode.acc_seg: 99.8905  aux.loss_ce: 0.0014  aux.acc_seg: 99.8684
+2023/02/14 01:58:16 - mmengine - INFO - Exp name: pspnet_r50-d8_4xb2-40k_cityscapes-512x1024_20230214_003728
+2023/02/14 01:58:16 - mmengine - INFO - Iter(train) [49000/50000]  lr: 1.0000e-04  eta: 0:01:20  time: 0.0810  data_time: 0.0019  memory: 2226  loss: 0.0079  decode.loss_ce: 0.0052  decode.acc_seg: 99.6917  aux.loss_ce: 0.0027  aux.acc_seg: 99.6991
+2023/02/14 01:58:20 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0172  data_time: 0.0010  memory: 695  
+2023/02/14 01:58:23 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0172  data_time: 0.0011  memory: 695  
+2023/02/14 01:58:25 - mmengine - INFO - per class results:
+2023/02/14 01:58:25 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 99.62 | 99.82 |
+| glomeruili | 81.82 | 89.43 |
++------------+-------+-------+
+2023/02/14 01:58:25 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.6200  mIoU: 90.7200  mAcc: 94.6200
+2023/02/14 01:58:41 - mmengine - INFO - Iter(train) [49200/50000]  lr: 1.0000e-04  eta: 0:01:04  time: 0.0805  data_time: 0.0017  memory: 2226  loss: 0.0039  decode.loss_ce: 0.0025  decode.acc_seg: 99.8885  aux.loss_ce: 0.0015  aux.acc_seg: 99.8850
+2023/02/14 01:58:58 - mmengine - INFO - Iter(train) [49400/50000]  lr: 1.0000e-04  eta: 0:00:48  time: 0.0807  data_time: 0.0015  memory: 2226  loss: 0.0041  decode.loss_ce: 0.0025  decode.acc_seg: 100.0000  aux.loss_ce: 0.0016  aux.acc_seg: 100.0000
+2023/02/14 01:59:09 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0165  data_time: 0.0010  memory: 2226  
+2023/02/14 01:59:13 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0167  data_time: 0.0011  memory: 695  
+2023/02/14 01:59:15 - mmengine - INFO - per class results:
+2023/02/14 01:59:15 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 99.62 | 99.83 |
+| glomeruili | 81.76 | 89.06 |
++------------+-------+-------+
+2023/02/14 01:59:15 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.6200  mIoU: 90.6900  mAcc: 94.4400
+2023/02/14 01:59:23 - mmengine - INFO - Iter(train) [49600/50000]  lr: 1.0000e-04  eta: 0:00:32  time: 0.0805  data_time: 0.0017  memory: 2226  loss: 0.0091  decode.loss_ce: 0.0062  decode.acc_seg: 100.0000  aux.loss_ce: 0.0029  aux.acc_seg: 100.0000
+2023/02/14 01:59:39 - mmengine - INFO - Iter(train) [49800/50000]  lr: 1.0000e-04  eta: 0:00:16  time: 0.0807  data_time: 0.0018  memory: 2226  loss: 0.0061  decode.loss_ce: 0.0039  decode.acc_seg: 99.6918  aux.loss_ce: 0.0022  aux.acc_seg: 99.6498
+2023/02/14 01:59:55 - mmengine - INFO - Exp name: pspnet_r50-d8_4xb2-40k_cityscapes-512x1024_20230214_003728
+2023/02/14 01:59:55 - mmengine - INFO - Iter(train) [50000/50000]  lr: 1.0000e-04  eta: 0:00:00  time: 0.0808  data_time: 0.0018  memory: 2226  loss: 0.0092  decode.loss_ce: 0.0060  decode.acc_seg: 100.0000  aux.loss_ce: 0.0032  aux.acc_seg: 100.0000
+2023/02/14 01:59:55 - mmengine - INFO - Saving checkpoint at 50000 iterations
+2023/02/14 02:00:01 - mmengine - INFO - Iter(val) [200/515]    eta: 0:00:05  time: 0.0170  data_time: 0.0010  memory: 695  
+2023/02/14 02:00:05 - mmengine - INFO - Iter(val) [400/515]    eta: 0:00:01  time: 0.0171  data_time: 0.0012  memory: 695  
+2023/02/14 02:00:07 - mmengine - INFO - per class results:
+2023/02/14 02:00:07 - mmengine - INFO - 
++------------+-------+-------+
+|   Class    |  IoU  |  Acc  |
++------------+-------+-------+
+| background | 99.61 | 99.81 |
+| glomeruili |  81.7 | 89.74 |
++------------+-------+-------+
+2023/02/14 02:00:07 - mmengine - INFO - Iter(val) [515/515]  aAcc: 99.6200  mIoU: 90.6600  mAcc: 94.7800
